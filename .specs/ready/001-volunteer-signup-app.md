@@ -121,6 +121,18 @@ The data layer lives in `lib/data/` and exports functions with signatures that m
 - Keep the sign-up interaction simple for the demo (type name, no identity verification)
 - Style is designer's choice — clean, modern, baseball-appropriate
 
+## Foundation (already set up on `develop`)
+
+The following shared foundation is in place. Worktree variations build on top of this:
+
+- **Next.js scaffold**: App Router, TypeScript, Tailwind CSS v4, ESLint
+- **shadcn/ui**: Initialized with `button` component and `utils.ts`
+- **Data types**: `src/lib/types.ts` — `Team`, `SignupList`, `EventInfo`, `FieldDefinition`, `SignupEntry`, `ListStatus`, `UrgencyLevel`
+- **Mock data**: `src/lib/data/mock-data.ts` — 1 team, 4 events across urgency tiers, 4 duty types, 2 walk-up song lists (base + Halloween)
+- **Data layer API**: `src/lib/data/index.ts` — `searchTeamsByCoach()`, `getTeamBySlug()`, `getSignupListsForTeam()`, `getSignupListBySlug()`, `getListStatus()`, `groupListsByEvent()`, `getStandaloneLists()`
+- **Route stubs**: `/` (homepage), `/t/[teamSlug]` (dashboard), `/t/[teamSlug]/[listSlug]` (list detail)
+- **Build verified**: `npm run build` passes cleanly
+
 ## Notes
 
 - After entering the coach name, the parent lands on a bookmarkable URL (`/t/team-slug`) so they don't have to repeat the search
