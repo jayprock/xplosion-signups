@@ -1,5 +1,6 @@
-// Individual Sign-Up List page
-// Shows full details for a single sign-up list (event-tied or standalone).
+import { notFound } from "next/navigation";
+import { getTeamBySlug, getSignupListBySlug } from "@/lib/data";
+import { SignupListClient } from "./signup-list-client";
 
 export default async function SignupListPage({
   params,
@@ -7,13 +8,11 @@ export default async function SignupListPage({
   params: Promise<{ teamSlug: string; listSlug: string }>;
 }) {
   const { teamSlug, listSlug } = await params;
+  const team = getTeamBySlug(teamSlug);
+  if (!team) notFound();
 
-  return (
-    <div>
-      <h1>Sign-Up List</h1>
-      <p>Team: {teamSlug}</p>
-      <p>List: {listSlug}</p>
-      <p>TODO: Implement sign-up list view with slots/entries</p>
-    </div>
-  );
+  const list = getSignupListBySlug(team.id, listSlug);
+  if (!list) notFound();
+
+  return <SignupListClient team={team} list={list} />;
 }
