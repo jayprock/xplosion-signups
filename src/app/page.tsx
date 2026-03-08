@@ -1,65 +1,146 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { searchTeamsByCoach } from "@/lib/data";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, ChevronRight, Zap } from "lucide-react";
 
 export default function Home() {
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [error, setError] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!query.trim()) {
+      setError("Enter your coach's last name");
+      return;
+    }
+    setIsSearching(true);
+    const results = searchTeamsByCoach(query.trim());
+    if (results.length === 0) {
+      setError("No team found. Check the spelling and try again.");
+      setIsSearching(false);
+      return;
+    }
+    router.push(`/t/${results[0].slug}`);
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="relative min-h-screen flex flex-col overflow-hidden">
+      {/* Background: black with subtle diagonal red stripes */}
+      <div className="absolute inset-0 stripe-pattern" />
+
+      {/* Decorative diagonal bar */}
+      <div className="absolute -top-20 -right-20 w-80 h-80 bg-xred/5 rotate-12 rounded-3xl" />
+      <div className="absolute -bottom-32 -left-20 w-96 h-96 bg-xred/3 -rotate-12 rounded-3xl" />
+
+      {/* Header */}
+      <header className="relative z-10 px-5 pt-6">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-xred rounded-sm flex items-center justify-center -skew-x-6">
+            <Zap className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-sm font-bold tracking-widest uppercase text-zinc-400">
+            Xplosion
+          </span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </header>
+
+      {/* Main content */}
+      <main className="relative z-10 flex-1 flex flex-col justify-center px-5 pb-24">
+        <div className="max-w-lg mx-auto w-full">
+          {/* Hero text */}
+          <div className="mb-10 animate-slide-up">
+            <div className="inline-block mb-4">
+              <span className="text-[0.65rem] font-bold tracking-[0.25em] uppercase text-xred bg-xred/10 px-3 py-1.5 rounded-sm">
+                Travel Baseball Sign-Ups
+              </span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.1] mb-4">
+              <span className="text-white">Find your</span>
+              <br />
+              <span className="text-xred">team.</span>
+            </h1>
+            <p className="text-zinc-400 text-base leading-relaxed max-w-sm">
+              Sign up for game-day duties, submit walk-up songs, and stay on top
+              of what your team needs.
+            </p>
+          </div>
+
+          {/* Search form */}
+          <form
+            onSubmit={handleSearch}
+            className="animate-slide-up"
+            style={{ animationDelay: "0.1s" }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">
+                <Search className="w-5 h-5" />
+              </div>
+              <Input
+                type="text"
+                placeholder="Coach's last name"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setError("");
+                }}
+                className="h-14 pl-12 pr-14 text-base bg-zinc-900/80 border-zinc-700/50 rounded-xl text-white placeholder:text-zinc-500 focus:border-xred focus:ring-xred/30 transition-all"
+                autoFocus
+              />
+              <Button
+                type="submit"
+                size="icon-lg"
+                disabled={isSearching}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-xred hover:bg-xred-dark text-white rounded-lg"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </div>
+            {error && (
+              <p className="mt-3 text-sm text-red-400 flex items-center gap-1.5">
+                <span className="w-1 h-1 rounded-full bg-red-400 inline-block" />
+                {error}
+              </p>
+            )}
+            <p className="mt-4 text-xs text-zinc-600">
+              Try &quot;Smith&quot; to see the demo team
+            </p>
+          </form>
         </div>
       </main>
+
+      {/* Footer CTA for coaches */}
+      <footer
+        className="relative z-10 px-5 pb-8 animate-slide-up"
+        style={{ animationDelay: "0.2s" }}
+      >
+        <div className="max-w-lg mx-auto w-full">
+          <div className="border border-zinc-800 rounded-xl p-4 flex items-center justify-between bg-zinc-900/40 backdrop-blur-sm">
+            <div>
+              <p className="text-sm font-medium text-zinc-300">
+                Are you a coach?
+              </p>
+              <p className="text-xs text-zinc-500">
+                Set up sign-ups for your team
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-zinc-700 text-zinc-300 hover:text-white hover:border-xred/50"
+              disabled
+            >
+              Coming Soon
+            </Button>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
