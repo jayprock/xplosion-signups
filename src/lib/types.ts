@@ -10,7 +10,7 @@ export type Team = {
   seasonYear: number;
 };
 
-export type SignupListCategory = "event-tied" | "standalone";
+export type SignupListCategory = "dated" | "standalone";
 
 export type SignupList = {
   id: string;
@@ -18,22 +18,20 @@ export type SignupList = {
   name: string;
   slug: string;
   category: SignupListCategory;
-  /** For event-tied lists: the event details */
-  event?: EventInfo;
+  /** For dated sign-ups: when this duty needs to happen */
+  date?: string; // ISO date string
+  /** Optional time */
+  time?: string;
+  /** Optional location */
+  location?: string;
+  /** Optional note for context (e.g., "Game day", "before practice") */
+  note?: string;
   /** The fields each signup entry collects */
   fields: FieldDefinition[];
   /** How many slots/entries are needed */
   slotsNeeded: number;
   /** Current entries */
   entries: SignupEntry[];
-};
-
-export type EventInfo = {
-  date: string; // ISO date string
-  time?: string; // e.g. "6:00 PM"
-  opponent?: string;
-  location?: string;
-  isHome: boolean;
 };
 
 export type FieldDefinition = {

@@ -32,7 +32,6 @@ export function getSignupListBySlug(
 
 export function getListStatus(list: SignupList): ListStatus {
   const filledCount = list.entries.filter((e) => {
-    // For walk-up songs, an entry is "filled" if the required fields have values
     const requiredFields = list.fields.filter((f) => f.required);
     return requiredFields.every((f) => {
       const val = e.values[f.key];
@@ -56,9 +55,9 @@ function computeUrgencyLevel(list: SignupList): UrgencyLevel {
     return "info";
   }
 
-  if (!list.event) return "info";
+  if (!list.date) return "info";
 
-  const eventDate = new Date(list.event.date);
+  const eventDate = new Date(list.date);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   eventDate.setHours(0, 0, 0, 0);
@@ -72,32 +71,20 @@ function computeUrgencyLevel(list: SignupList): UrgencyLevel {
   return "info";
 }
 
-// Group event-tied lists by their event (same date + opponent)
-export type EventGroup = {
+// Group dated sign-up lists by their date
+export type DateGroup = {
   date: string;
-  time?: string;
-  opponent?: string;
-  location?: string;
-  isHome: boolean;
   lists: SignupList[];
 };
 
-export function groupListsByEvent(lists: SignupList[]): EventGroup[] {
-  const eventLists = lists.filter((l) => l.category === "event-tied" && l.event);
-  const groups = new Map<string, EventGroup>();
+export function groupListsByDate(lists: SignupList[]): DateGroup[] {
+  const datedLists = lists.filter((l) => l.category === "dated" && l.date);
+  const groups = new Map<string, DateGroup>();
 
-  for (const list of eventLists) {
-    const evt = list.event!;
-    const key = `${evt.date}-${evt.opponent}`;
+  for (const list of datedLists) {
+    const key = list.date!;
     if (!groups.has(key)) {
-      groups.set(key, {
-        date: evt.date,
-        time: evt.time,
-        opponent: evt.opponent,
-        location: evt.location,
-        isHome: evt.isHome,
-        lists: [],
-      });
+      groups.set(key, { date: key, lists: [] });
     }
     groups.get(key)!.lists.push(list);
   }
