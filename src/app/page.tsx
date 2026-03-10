@@ -34,22 +34,14 @@ export default function Home() {
 
         {/* Content */}
         <div className="relative z-10 text-center w-full max-w-md">
-          {/* Brand label */}
-          <p
-            className="text-[11px] font-bold uppercase tracking-[0.35em] text-red-500 mb-8 opacity-0 animate-fade-in-up"
-            style={{ animationDelay: "0.1s" }}
-          >
-            Team Signups
-          </p>
-
           {/* Hero headline */}
           <h1
             className="font-heading text-6xl sm:text-8xl leading-[0.85] tracking-tight mb-6 opacity-0 animate-fade-in-up"
             style={{ animationDelay: "0.2s" }}
           >
-            GAME DAY
+            <span className="text-red-500">XPLOSION</span>
             <br />
-            <span className="text-red-500">STARTS HERE</span>
+            SIGNUPS
           </h1>
 
           {/* Subtitle */}

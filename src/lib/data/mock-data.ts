@@ -37,178 +37,101 @@ export const teams: Team[] = [
   },
 ];
 
+// --- Dates for recurring mowing (weekly) ---
+
+const mowDate1 = daysFromNow(2);
+const mowDate2 = daysFromNow(9);
+const mowDate3 = daysFromNow(16);
+const mowDate4 = daysFromNow(23);
+const mowDate5 = daysFromNow(30);
+const mowDate6 = daysFromNow(37);
+
+// --- Dates for other duties ---
+
+const dutyDate1 = daysFromNow(2); // same day as first mowing (busy day)
+const dutyDate2 = daysFromNow(12);
+const dutyDate3 = daysFromNow(19);
+const dutyDate4 = daysFromNow(26);
+
 // --- Sign-up Lists ---
 
 export const signupLists: SignupList[] = [
-  // EVENT-TIED: Game 1 - this week (urgent if unfilled)
+  // ============================================================
+  // MOWING — weekly recurring, 1 volunteer needed
+  // ============================================================
   {
-    id: "list-fp-1",
-    teamId: "team-1",
-    name: "Field Prep",
-    slug: "field-prep-game-1",
-    category: "event-tied",
-    event: {
-      date: daysFromNow(2),
-      time: "6:00 PM",
-      opponent: "Thunder",
-      location: "Riverside Field #3",
-      isHome: true,
-    },
-    fields: volunteerFields,
-    slotsNeeded: 2,
-    entries: [
-      {
-        id: "e1",
-        slotIndex: 0,
-        values: { name: "Mike Johnson" },
-        signedUpAt: new Date().toISOString(),
-      },
-    ],
-  },
-  {
-    id: "list-fs-1",
-    teamId: "team-1",
-    name: "Field Shutdown",
-    slug: "field-shutdown-game-1",
-    category: "event-tied",
-    event: {
-      date: daysFromNow(2),
-      time: "6:00 PM",
-      opponent: "Thunder",
-      location: "Riverside Field #3",
-      isHome: true,
-    },
-    fields: volunteerFields,
-    slotsNeeded: 2,
-    entries: [],
-  },
-  {
-    id: "list-sn-1",
-    teamId: "team-1",
-    name: "Snacks",
-    slug: "snacks-game-1",
-    category: "event-tied",
-    event: {
-      date: daysFromNow(2),
-      time: "6:00 PM",
-      opponent: "Thunder",
-      location: "Riverside Field #3",
-      isHome: true,
-    },
-    fields: volunteerFields,
-    slotsNeeded: 1,
-    entries: [
-      {
-        id: "e2",
-        slotIndex: 0,
-        values: { name: "Sarah Davis" },
-        signedUpAt: new Date().toISOString(),
-      },
-    ],
-  },
-  {
-    id: "list-mow-1",
+    id: "mow-1",
     teamId: "team-1",
     name: "Mowing",
-    slug: "mowing-game-1",
-    category: "event-tied",
-    event: {
-      date: daysFromNow(2),
-      time: "6:00 PM",
-      opponent: "Thunder",
-      location: "Riverside Field #3",
-      isHome: true,
-    },
+    slug: `mowing-${mowDate1}`,
+    category: "dated",
+    date: mowDate1,
+    time: "4:00 PM",
+    location: "Riverside Field #3",
     fields: volunteerFields,
     slotsNeeded: 1,
     entries: [],
   },
-
-  // EVENT-TIED: Game 2 - ~10 days out (high priority if unfilled)
   {
-    id: "list-fp-2",
+    id: "mow-2",
     teamId: "team-1",
-    name: "Field Prep",
-    slug: "field-prep-game-2",
-    category: "event-tied",
-    event: {
-      date: daysFromNow(10),
-      time: "1:00 PM",
-      opponent: "Vipers",
-      location: "Oak Park Diamond",
-      isHome: false,
-    },
+    name: "Mowing",
+    slug: `mowing-${mowDate2}`,
+    category: "dated",
+    date: mowDate2,
+    time: "4:00 PM",
+    location: "Riverside Field #3",
     fields: volunteerFields,
-    slotsNeeded: 2,
-    entries: [],
-  },
-  {
-    id: "list-fs-2",
-    teamId: "team-1",
-    name: "Field Shutdown",
-    slug: "field-shutdown-game-2",
-    category: "event-tied",
-    event: {
-      date: daysFromNow(10),
-      time: "1:00 PM",
-      opponent: "Vipers",
-      location: "Oak Park Diamond",
-      isHome: false,
-    },
-    fields: volunteerFields,
-    slotsNeeded: 2,
+    slotsNeeded: 1,
     entries: [
       {
-        id: "e3",
+        id: "mow-2-e1",
         slotIndex: 0,
         values: { name: "Tom Williams" },
         signedUpAt: new Date().toISOString(),
       },
-      {
-        id: "e4",
-        slotIndex: 1,
-        values: { name: "Lisa Chen" },
-        signedUpAt: new Date().toISOString(),
-      },
     ],
   },
   {
-    id: "list-sn-2",
+    id: "mow-3",
     teamId: "team-1",
-    name: "Snacks",
-    slug: "snacks-game-2",
-    category: "event-tied",
-    event: {
-      date: daysFromNow(10),
-      time: "1:00 PM",
-      opponent: "Vipers",
-      location: "Oak Park Diamond",
-      isHome: false,
-    },
+    name: "Mowing",
+    slug: `mowing-${mowDate3}`,
+    category: "dated",
+    date: mowDate3,
+    time: "4:00 PM",
+    location: "Riverside Field #3",
     fields: volunteerFields,
     slotsNeeded: 1,
     entries: [],
   },
-
-  // EVENT-TIED: Game 3 - ~18 days out (warning if unfilled)
   {
-    id: "list-fp-3",
+    id: "mow-4",
     teamId: "team-1",
-    name: "Field Prep",
-    slug: "field-prep-game-3",
-    category: "event-tied",
-    event: {
-      date: daysFromNow(18),
-      time: "10:00 AM",
-      opponent: "Hurricanes",
-      location: "Riverside Field #3",
-      isHome: true,
-    },
+    name: "Mowing",
+    slug: `mowing-${mowDate4}`,
+    category: "dated",
+    date: mowDate4,
+    time: "4:00 PM",
+    location: "Riverside Field #3",
     fields: volunteerFields,
-    slotsNeeded: 2,
+    slotsNeeded: 1,
+    entries: [],
+  },
+  {
+    id: "mow-5",
+    teamId: "team-1",
+    name: "Mowing",
+    slug: `mowing-${mowDate5}`,
+    category: "dated",
+    date: mowDate5,
+    time: "4:00 PM",
+    location: "Riverside Field #3",
+    fields: volunteerFields,
+    slotsNeeded: 1,
     entries: [
       {
-        id: "e5",
+        id: "mow-5-e1",
         slotIndex: 0,
         values: { name: "Dan Martinez" },
         signedUpAt: new Date().toISOString(),
@@ -216,29 +139,110 @@ export const signupLists: SignupList[] = [
     ],
   },
   {
-    id: "list-fs-3",
+    id: "mow-6",
     teamId: "team-1",
-    name: "Field Shutdown",
-    slug: "field-shutdown-game-3",
-    category: "event-tied",
-    event: {
-      date: daysFromNow(18),
-      time: "10:00 AM",
-      opponent: "Hurricanes",
-      location: "Riverside Field #3",
-      isHome: true,
-    },
+    name: "Mowing",
+    slug: `mowing-${mowDate6}`,
+    category: "dated",
+    date: mowDate6,
+    time: "4:00 PM",
+    location: "Riverside Field #3",
+    fields: volunteerFields,
+    slotsNeeded: 1,
+    entries: [],
+  },
+
+  // ============================================================
+  // FIELD PREP — as needed, 2 volunteers
+  // ============================================================
+  {
+    id: "fp-1",
+    teamId: "team-1",
+    name: "Field Prep",
+    slug: `field-prep-${dutyDate1}`,
+    category: "dated",
+    date: dutyDate1,
+    time: "5:00 PM",
+    location: "Riverside Field #3",
+    note: "Game vs Thunder",
     fields: volunteerFields,
     slotsNeeded: 2,
     entries: [
       {
-        id: "e6",
+        id: "fp-1-e1",
+        slotIndex: 0,
+        values: { name: "Mike Johnson" },
+        signedUpAt: new Date().toISOString(),
+      },
+    ],
+  },
+  {
+    id: "fp-2",
+    teamId: "team-1",
+    name: "Field Prep",
+    slug: `field-prep-${dutyDate3}`,
+    category: "dated",
+    date: dutyDate3,
+    time: "5:30 PM",
+    location: "Riverside Field #3",
+    note: "Before practice",
+    fields: volunteerFields,
+    slotsNeeded: 2,
+    entries: [],
+  },
+  {
+    id: "fp-3",
+    teamId: "team-1",
+    name: "Field Prep",
+    slug: `field-prep-${dutyDate4}`,
+    category: "dated",
+    date: dutyDate4,
+    time: "12:00 PM",
+    location: "Central Sports Complex",
+    note: "Game vs Wildcats",
+    fields: volunteerFields,
+    slotsNeeded: 2,
+    entries: [],
+  },
+
+  // ============================================================
+  // FIELD SHUTDOWN — as needed, 2 volunteers
+  // ============================================================
+  {
+    id: "fs-1",
+    teamId: "team-1",
+    name: "Field Shutdown",
+    slug: `field-shutdown-${dutyDate1}`,
+    category: "dated",
+    date: dutyDate1,
+    time: "8:30 PM",
+    location: "Riverside Field #3",
+    note: "After Thunder game",
+    fields: volunteerFields,
+    slotsNeeded: 2,
+    entries: [],
+  },
+  {
+    id: "fs-2",
+    teamId: "team-1",
+    name: "Field Shutdown",
+    slug: `field-shutdown-${dutyDate2}`,
+    category: "dated",
+    date: dutyDate2,
+    time: "8:00 PM",
+    location: "Riverside Field #3",
+    note: "After Vipers game",
+    fields: volunteerFields,
+    slotsNeeded: 2,
+    entries: [
+      {
+        id: "fs-2-e1",
         slotIndex: 0,
         values: { name: "Amy Rodriguez" },
         signedUpAt: new Date().toISOString(),
       },
       {
-        id: "e7",
+        id: "fs-2-e2",
         slotIndex: 1,
         values: { name: "Chris Taylor" },
         signedUpAt: new Date().toISOString(),
@@ -246,42 +250,59 @@ export const signupLists: SignupList[] = [
     ],
   },
 
-  // EVENT-TIED: Game 4 - ~25 days out (informational)
+  // ============================================================
+  // SNACK DUTY — as needed, 1 volunteer
+  // ============================================================
   {
-    id: "list-fp-4",
+    id: "sn-1",
     teamId: "team-1",
-    name: "Field Prep",
-    slug: "field-prep-game-4",
-    category: "event-tied",
-    event: {
-      date: daysFromNow(25),
-      time: "3:00 PM",
-      opponent: "Wildcats",
-      location: "Central Sports Complex",
-      isHome: true,
-    },
-    fields: volunteerFields,
-    slotsNeeded: 2,
-    entries: [],
-  },
-  {
-    id: "list-sn-4",
-    teamId: "team-1",
-    name: "Snacks",
-    slug: "snacks-game-4",
-    category: "event-tied",
-    event: {
-      date: daysFromNow(25),
-      time: "3:00 PM",
-      opponent: "Wildcats",
-      location: "Central Sports Complex",
-      isHome: true,
-    },
+    name: "Snack Duty",
+    slug: `snack-duty-${dutyDate1}`,
+    category: "dated",
+    date: dutyDate1,
+    time: "5:30 PM",
+    location: "Riverside Field #3",
+    note: "Game vs Thunder",
     fields: volunteerFields,
     slotsNeeded: 1,
     entries: [
       {
-        id: "e8",
+        id: "sn-1-e1",
+        slotIndex: 0,
+        values: { name: "Sarah Davis" },
+        signedUpAt: new Date().toISOString(),
+      },
+    ],
+  },
+  {
+    id: "sn-2",
+    teamId: "team-1",
+    name: "Snack Duty",
+    slug: `snack-duty-${dutyDate2}`,
+    category: "dated",
+    date: dutyDate2,
+    time: "12:30 PM",
+    location: "Oak Park Diamond",
+    note: "Game vs Vipers",
+    fields: volunteerFields,
+    slotsNeeded: 1,
+    entries: [],
+  },
+  {
+    id: "sn-3",
+    teamId: "team-1",
+    name: "Snack Duty",
+    slug: `snack-duty-${dutyDate4}`,
+    category: "dated",
+    date: dutyDate4,
+    time: "12:00 PM",
+    location: "Central Sports Complex",
+    note: "Game vs Wildcats",
+    fields: volunteerFields,
+    slotsNeeded: 1,
+    entries: [
+      {
+        id: "sn-3-e1",
         slotIndex: 0,
         values: { name: "Jenny Park" },
         signedUpAt: new Date().toISOString(),
@@ -289,7 +310,9 @@ export const signupLists: SignupList[] = [
     ],
   },
 
+  // ============================================================
   // STANDALONE: Walk-Up Songs (base)
+  // ============================================================
   {
     id: "list-walkup-base",
     teamId: "team-1",

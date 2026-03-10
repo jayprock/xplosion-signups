@@ -4,20 +4,18 @@ import { cn } from "@/lib/utils";
 import {
   getTeamBySlug,
   getSignupListsForTeam,
-  groupListsByEvent,
+  groupListsByDate,
   getStandaloneLists,
   getListStatus,
-  type EventGroup,
+  type DateGroup,
 } from "@/lib/data";
-import type { SignupList, UrgencyLevel } from "@/lib/types";
+import type { SignupList } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
 import {
   ArrowLeft,
   ChevronRight,
   Music,
   Calendar,
-  Clock,
-  MapPin,
 } from "lucide-react";
 
 function formatDate(dateStr: string): string {
@@ -29,31 +27,9 @@ function formatDate(dateStr: string): string {
   });
 }
 
-function getWorstUrgency(lists: SignupList[]): UrgencyLevel {
-  const priority: UrgencyLevel[] = [
-    "urgent",
-    "high",
-    "warning",
-    "info",
-    "complete",
-  ];
-  let worst: UrgencyLevel = "complete";
-  for (const list of lists) {
-    const status = getListStatus(list);
-    if (priority.indexOf(status.level) < priority.indexOf(worst)) {
-      worst = status.level;
-    }
-  }
-  return worst;
+function isAllComplete(lists: SignupList[]): boolean {
+  return lists.every((list) => getListStatus(list).level === "complete");
 }
-
-const urgencyBorder: Record<UrgencyLevel, string> = {
-  urgent: "border-l-red-500",
-  high: "border-l-orange-500",
-  warning: "border-l-amber-500",
-  info: "border-l-sky-400",
-  complete: "border-l-emerald-500",
-};
 
 export default async function TeamDashboardPage({
   params,
@@ -65,7 +41,7 @@ export default async function TeamDashboardPage({
   if (!team) notFound();
 
   const allLists = getSignupListsForTeam(team.id);
-  const eventGroups = groupListsByEvent(allLists);
+  const dateGroups = groupListsByDate(allLists);
   const standaloneLists = getStandaloneLists(allLists);
 
   return (
@@ -91,15 +67,15 @@ export default async function TeamDashboardPage({
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6 space-y-8">
-        {/* Game sections */}
-        {eventGroups.length > 0 && (
+        {/* Upcoming sign-ups grouped by date */}
+        {dateGroups.length > 0 && (
           <section className="space-y-4">
             <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-400 px-1">
-              Upcoming Games
+              Upcoming
             </h2>
-            {eventGroups.map((group) => (
-              <GameCard
-                key={`${group.date}-${group.opponent}`}
+            {dateGroups.map((group) => (
+              <DateCard
+                key={group.date}
                 group={group}
                 teamSlug={teamSlug}
               />
@@ -145,51 +121,24 @@ export default async function TeamDashboardPage({
   );
 }
 
-function GameCard({
+function DateCard({
   group,
   teamSlug,
 }: {
-  group: EventGroup;
+  group: DateGroup;
   teamSlug: string;
 }) {
-  const urgency = getWorstUrgency(group.lists);
+  const allDone = isAllComplete(group.lists);
 
   return (
-    <div
-      className={cn(
-        "bg-white rounded-2xl ring-1 ring-black/[0.04] shadow-sm overflow-hidden border-l-[3px]",
-        urgencyBorder[urgency]
-      )}
-    >
-      {/* Game header */}
-      <div className="p-4 pb-3">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="font-heading text-xl tracking-tight text-neutral-900 leading-none">
-            VS {(group.opponent || "TBD").toUpperCase()}
-          </h3>
-          <StatusBadge level={urgency} />
-        </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-neutral-500">
-          <span className="inline-flex items-center gap-1.5">
-            <Calendar className="size-3.5 text-neutral-400" />
-            {formatDate(group.date)}
-          </span>
-          {group.time && (
-            <span className="inline-flex items-center gap-1.5">
-              <Clock className="size-3.5 text-neutral-400" />
-              {group.time}
-            </span>
-          )}
-          {group.location && (
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="size-3.5 text-neutral-400" />
-              {group.location}
-            </span>
-          )}
-          <span className="text-neutral-400 text-xs uppercase tracking-wider font-medium">
-            {group.isHome ? "Home" : "Away"}
-          </span>
-        </div>
+    <div className="bg-white rounded-2xl ring-1 ring-black/[0.04] shadow-sm overflow-hidden">
+      {/* Date header */}
+      <div className="px-4 pt-4 pb-3 flex items-center justify-between">
+        <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-neutral-900">
+          <Calendar className="size-3.5 text-neutral-400" />
+          {formatDate(group.date)}
+        </span>
+        <StatusBadge level={allDone ? "complete" : "urgent"} />
       </div>
 
       {/* Duty rows */}
@@ -205,10 +154,17 @@ function GameCard({
                 i < group.lists.length - 1 && "border-b border-neutral-100/80"
               )}
             >
-              <span className="font-medium text-neutral-700 text-sm">
-                {list.name}
-              </span>
-              <div className="flex items-center gap-3">
+              <div className="min-w-0">
+                <span className="font-medium text-neutral-700 text-sm">
+                  {list.name}
+                </span>
+                {list.note && (
+                  <span className="text-neutral-400 text-xs ml-2">
+                    {list.note}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
                 <span
                   className={cn(
                     "text-sm tabular-nums font-medium",
@@ -222,7 +178,6 @@ function GameCard({
                 <FillDots
                   filled={status.filled}
                   total={status.total}
-                  level={status.level}
                 />
                 <ChevronRight className="size-4 text-neutral-300 group-hover/row:text-neutral-500 transition-colors" />
               </div>
@@ -237,23 +192,10 @@ function GameCard({
 function FillDots({
   filled,
   total,
-  level,
 }: {
   filled: number;
   total: number;
-  level: UrgencyLevel;
 }) {
-  const dotColor =
-    level === "complete"
-      ? "bg-emerald-500"
-      : level === "urgent"
-        ? "bg-red-500"
-        : level === "high"
-          ? "bg-orange-500"
-          : level === "warning"
-            ? "bg-amber-500"
-            : "bg-sky-500";
-
   return (
     <div className="flex gap-1">
       {Array.from({ length: total }, (_, i) => (
@@ -261,7 +203,7 @@ function FillDots({
           key={i}
           className={cn(
             "size-2 rounded-full",
-            i < filled ? dotColor : "bg-neutral-200"
+            i < filled ? "bg-neutral-900" : "bg-neutral-200"
           )}
         />
       ))}

@@ -68,30 +68,29 @@ export function SignupListClient({
           </div>
         </div>
 
-        {/* Event info for event-tied lists */}
-        {currentList.event && (
+        {/* Date/location info for dated sign-ups */}
+        {currentList.date && (
           <div className="bg-white rounded-2xl ring-1 ring-black/[0.04] shadow-sm p-4">
-            <p className="font-heading text-lg text-neutral-900 mb-2 leading-none">
-              VS {(currentList.event.opponent || "TBD").toUpperCase()}
-              <span className="text-neutral-400 text-sm font-sans font-normal ml-2">
-                {currentList.event.isHome ? "Home" : "Away"}
-              </span>
-            </p>
+            {currentList.note && (
+              <p className="text-sm text-neutral-500 mb-2">
+                {currentList.note}
+              </p>
+            )}
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-neutral-500">
               <span className="inline-flex items-center gap-1.5">
                 <Calendar className="size-3.5 text-neutral-400" />
-                {formatDate(currentList.event.date)}
+                {formatDate(currentList.date)}
               </span>
-              {currentList.event.time && (
+              {currentList.time && (
                 <span className="inline-flex items-center gap-1.5">
                   <Clock className="size-3.5 text-neutral-400" />
-                  {currentList.event.time}
+                  {currentList.time}
                 </span>
               )}
-              {currentList.event.location && (
+              {currentList.location && (
                 <span className="inline-flex items-center gap-1.5">
                   <MapPin className="size-3.5 text-neutral-400" />
-                  {currentList.event.location}
+                  {currentList.location}
                 </span>
               )}
             </div>
@@ -99,7 +98,7 @@ export function SignupListClient({
         )}
 
         {/* Slots/entries */}
-        {currentList.category === "event-tied" ? (
+        {currentList.category === "dated" ? (
           <EventTiedSlots
             list={currentList}
             entries={entries}
