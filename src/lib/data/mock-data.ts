@@ -34,6 +34,7 @@ export const teams: Team[] = [
     slug: "xplosion-12u",
     coachLastName: "Smith",
     seasonYear: 2026,
+    adminPassword: "xplosion",
   },
 ];
 

@@ -12,6 +12,8 @@ import {
   Calendar,
   Clock,
   MapPin,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 
 function formatDate(dateStr: string): string {
@@ -113,6 +115,15 @@ export function SignupListClient({
                 },
               ]);
             }}
+            onUpdate={(entryId, values) => {
+              setEntries((prev) =>
+                prev.map((e) =>
+                  e.id === entryId
+                    ? { ...e, values: { ...e.values, ...values } }
+                    : e
+                )
+              );
+            }}
             onRemove={(entryId) => {
               setEntries((prev) => prev.filter((e) => e.id !== entryId));
             }}
@@ -129,6 +140,9 @@ export function SignupListClient({
                     : e
                 )
               );
+            }}
+            onRemove={(entryId) => {
+              setEntries((prev) => prev.filter((e) => e.id !== entryId));
             }}
             onAdd={(values) => {
               setEntries((prev) => [
@@ -156,11 +170,13 @@ function EventTiedSlots({
   list,
   entries,
   onSignUp,
+  onUpdate,
   onRemove,
 }: {
   list: SignupList;
   entries: SignupEntry[];
   onSignUp: (slotIndex: number, name: string) => void;
+  onUpdate: (entryId: string, values: Record<string, string>) => void;
   onRemove: (entryId: string) => void;
 }) {
   return (
@@ -176,6 +192,7 @@ function EventTiedSlots({
             slotNumber={i + 1}
             entry={entry}
             onSignUp={(name) => onSignUp(i, name)}
+            onUpdate={(values) => entry && onUpdate(entry.id, values)}
             onRemove={() => entry && onRemove(entry.id)}
           />
         );
@@ -188,36 +205,111 @@ function VolunteerSlot({
   slotNumber,
   entry,
   onSignUp,
+  onUpdate,
   onRemove,
 }: {
   slotNumber: number;
   entry?: SignupEntry;
   onSignUp: (name: string) => void;
+  onUpdate: (values: Record<string, string>) => void;
   onRemove: () => void;
 }) {
   const [name, setName] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [confirmRemove, setConfirmRemove] = useState(false);
+
+  if (entry && editing) {
+    return (
+      <div className="bg-white rounded-2xl ring-1 ring-red-500/20 shadow-sm p-4">
+        <p className="text-xs text-neutral-400 font-medium mb-2">
+          Slot {slotNumber}
+        </p>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (editName.trim()) {
+              onUpdate({ name: editName.trim() });
+              setEditing(false);
+            }
+          }}
+          className="flex gap-2"
+        >
+          <input
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            autoFocus
+            className="flex-1 h-10 rounded-xl border border-neutral-200 px-3 text-sm focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all bg-neutral-50 focus:bg-white"
+          />
+          <button
+            type="submit"
+            disabled={!editName.trim()}
+            className="h-10 px-4 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-500 disabled:opacity-30 transition-all shrink-0"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            className="h-10 px-3 rounded-xl text-neutral-500 text-sm font-medium hover:bg-neutral-100 transition-colors shrink-0"
+          >
+            Cancel
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   if (entry) {
     return (
-      <div className="bg-white rounded-2xl ring-1 ring-emerald-500/20 shadow-sm p-4 flex items-center gap-3">
-        <div className="size-9 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-          <Check className="size-4 text-emerald-600" />
+      <div className="bg-white rounded-2xl ring-1 ring-emerald-500/20 shadow-sm p-4">
+        <div className="flex items-center gap-3">
+          <div className="size-9 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+            <Check className="size-4 text-emerald-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-neutral-400 font-medium">
+              Slot {slotNumber}
+            </p>
+            <p className="font-semibold text-neutral-900 truncate">
+              {entry.values.name}
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setEditName(entry.values.name);
+              setEditing(true);
+            }}
+            className="size-8 rounded-lg hover:bg-neutral-100 flex items-center justify-center transition-colors text-neutral-300 hover:text-neutral-600"
+            title="Edit"
+          >
+            <Pencil className="size-3.5" />
+          </button>
+          {confirmRemove ? (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={onRemove}
+                className="h-7 px-2 rounded-lg bg-red-600 text-white text-xs font-medium hover:bg-red-500 transition-all"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setConfirmRemove(false)}
+                className="h-7 px-2 rounded-lg text-neutral-500 text-xs hover:bg-neutral-100 transition-colors"
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmRemove(true)}
+              className="size-8 rounded-lg hover:bg-red-50 flex items-center justify-center transition-colors text-neutral-300 hover:text-red-500"
+              title="Remove"
+            >
+              <Trash2 className="size-3.5" />
+            </button>
+          )}
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs text-neutral-400 font-medium">
-            Slot {slotNumber}
-          </p>
-          <p className="font-semibold text-neutral-900 truncate">
-            {entry.values.name}
-          </p>
-        </div>
-        <button
-          onClick={onRemove}
-          className="size-8 rounded-lg hover:bg-red-50 flex items-center justify-center transition-colors text-neutral-300 hover:text-red-500"
-          title="Remove"
-        >
-          <XIcon className="size-4" />
-        </button>
       </div>
     );
   }
@@ -263,11 +355,13 @@ function StandaloneEntries({
   list,
   entries,
   onUpdate,
+  onRemove,
   onAdd,
 }: {
   list: SignupList;
   entries: SignupEntry[];
   onUpdate: (entryId: string, values: Record<string, string>) => void;
+  onRemove: (entryId: string) => void;
   onAdd: (values: Record<string, string>) => void;
 }) {
   const requiredFields = list.fields.filter((f) => f.required);
@@ -290,6 +384,7 @@ function StandaloneEntries({
           fields={list.fields}
           complete={isComplete(entry)}
           onUpdate={(values) => onUpdate(entry.id, values)}
+          onRemove={() => onRemove(entry.id)}
         />
       ))}
       {entries.length < list.slotsNeeded && (
@@ -305,27 +400,27 @@ function SongEntry({
   fields,
   complete,
   onUpdate,
+  onRemove,
 }: {
   entry: SignupEntry;
   number: number;
   fields: SignupList["fields"];
   complete: boolean;
   onUpdate: (values: Record<string, string>) => void;
+  onRemove: () => void;
 }) {
   const [editing, setEditing] = useState(!complete);
   const [formValues, setFormValues] = useState<Record<string, string>>(
     entry.values
   );
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
   const playerName = entry.values.playerName || `Player ${number}`;
   const editableFields = fields.filter((f) => f.key !== "playerName");
 
   if (complete && !editing) {
     return (
-      <div
-        className="bg-white rounded-2xl ring-1 ring-black/[0.04] shadow-sm p-4 cursor-pointer hover:ring-black/[0.08] hover:shadow-md transition-all"
-        onClick={() => setEditing(true)}
-      >
+      <div className="bg-white rounded-2xl ring-1 ring-black/[0.04] shadow-sm p-4">
         <div className="flex items-start gap-3">
           <div className="size-9 rounded-full bg-emerald-50 flex items-center justify-center text-sm font-bold text-emerald-700 shrink-0">
             {number}
@@ -342,8 +437,38 @@ function SongEntry({
               </p>
             )}
           </div>
-          <div className="size-6 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
-            <Check className="size-3.5 text-white" />
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => setEditing(true)}
+              className="size-8 rounded-lg hover:bg-neutral-100 flex items-center justify-center transition-colors text-neutral-300 hover:text-neutral-600"
+              title="Edit"
+            >
+              <Pencil className="size-3.5" />
+            </button>
+            {confirmRemove ? (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={onRemove}
+                  className="h-7 px-2 rounded-lg bg-red-600 text-white text-xs font-medium hover:bg-red-500 transition-all"
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={() => setConfirmRemove(false)}
+                  className="h-7 px-2 rounded-lg text-neutral-500 text-xs hover:bg-neutral-100 transition-colors"
+                >
+                  No
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmRemove(true)}
+                className="size-8 rounded-lg hover:bg-red-50 flex items-center justify-center transition-colors text-neutral-300 hover:text-red-500"
+                title="Remove"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -362,7 +487,31 @@ function SongEntry({
         >
           {number}
         </div>
-        <p className="font-semibold text-neutral-900">{playerName}</p>
+        <p className="font-semibold text-neutral-900 flex-1">{playerName}</p>
+        {confirmRemove ? (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onRemove}
+              className="h-7 px-2 rounded-lg bg-red-600 text-white text-xs font-medium hover:bg-red-500 transition-all"
+            >
+              Yes
+            </button>
+            <button
+              onClick={() => setConfirmRemove(false)}
+              className="h-7 px-2 rounded-lg text-neutral-500 text-xs hover:bg-neutral-100 transition-colors"
+            >
+              No
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmRemove(true)}
+            className="size-8 rounded-lg hover:bg-red-50 flex items-center justify-center transition-colors text-neutral-300 hover:text-red-500 shrink-0"
+            title="Remove"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
+        )}
       </div>
       <div className="space-y-2 pl-12">
         {editableFields.map((field) => (
