@@ -12,6 +12,8 @@ import {
   Calendar,
   Clock,
   MapPin,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 
 function formatDate(dateStr: string): string {
@@ -116,6 +118,15 @@ export function SignupListClient({
             onRemove={(entryId) => {
               setEntries((prev) => prev.filter((e) => e.id !== entryId));
             }}
+            onEdit={(entryId, name) => {
+              setEntries((prev) =>
+                prev.map((e) =>
+                  e.id === entryId
+                    ? { ...e, values: { ...e.values, name } }
+                    : e
+                )
+              );
+            }}
           />
         ) : (
           <StandaloneEntries
@@ -129,6 +140,9 @@ export function SignupListClient({
                     : e
                 )
               );
+            }}
+            onRemove={(entryId) => {
+              setEntries((prev) => prev.filter((e) => e.id !== entryId));
             }}
             onAdd={(values) => {
               setEntries((prev) => [
@@ -157,11 +171,13 @@ function EventTiedSlots({
   entries,
   onSignUp,
   onRemove,
+  onEdit,
 }: {
   list: SignupList;
   entries: SignupEntry[];
   onSignUp: (slotIndex: number, name: string) => void;
   onRemove: (entryId: string) => void;
+  onEdit: (entryId: string, name: string) => void;
 }) {
   return (
     <div className="space-y-3">
@@ -177,6 +193,7 @@ function EventTiedSlots({
             entry={entry}
             onSignUp={(name) => onSignUp(i, name)}
             onRemove={() => entry && onRemove(entry.id)}
+            onEdit={(name) => entry && onEdit(entry.id, name)}
           />
         );
       })}
@@ -189,13 +206,81 @@ function VolunteerSlot({
   entry,
   onSignUp,
   onRemove,
+  onEdit,
 }: {
   slotNumber: number;
   entry?: SignupEntry;
   onSignUp: (name: string) => void;
   onRemove: () => void;
+  onEdit: (name: string) => void;
 }) {
   const [name, setName] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [confirmRemove, setConfirmRemove] = useState(false);
+
+  if (entry && editing) {
+    return (
+      <div className="bg-white rounded-2xl ring-1 ring-black/[0.04] shadow-sm p-4">
+        <p className="text-xs text-neutral-400 font-medium mb-2">
+          Slot {slotNumber} &mdash; Editing
+        </p>
+        <div className="flex gap-2">
+          <input
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            placeholder="Your name"
+            className="flex-1 h-10 rounded-xl border border-neutral-200 px-3 text-sm focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all bg-neutral-50 focus:bg-white"
+          />
+          <button
+            onClick={() => {
+              if (editName.trim()) {
+                onEdit(editName.trim());
+                setEditing(false);
+              }
+            }}
+            disabled={!editName.trim()}
+            className="h-10 px-4 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-500 active:bg-red-700 disabled:opacity-30 transition-all shrink-0"
+          >
+            Save
+          </button>
+          <button
+            onClick={() => setEditing(false)}
+            className="h-10 px-3 rounded-xl text-neutral-500 text-sm font-medium hover:bg-neutral-100 transition-colors shrink-0"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (entry && confirmRemove) {
+    return (
+      <div className="bg-white rounded-2xl ring-1 ring-red-500/20 shadow-sm p-4">
+        <p className="text-sm text-neutral-700 mb-3">
+          Remove <strong>{entry.values.name}</strong> from slot {slotNumber}?
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              onRemove();
+              setConfirmRemove(false);
+            }}
+            className="h-9 px-4 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-500 transition-all"
+          >
+            Remove
+          </button>
+          <button
+            onClick={() => setConfirmRemove(false)}
+            className="h-9 px-3 rounded-xl text-neutral-500 text-sm font-medium hover:bg-neutral-100 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (entry) {
     return (
@@ -212,11 +297,21 @@ function VolunteerSlot({
           </p>
         </div>
         <button
-          onClick={onRemove}
+          onClick={() => {
+            setEditName(entry.values.name);
+            setEditing(true);
+          }}
+          className="size-8 rounded-lg hover:bg-neutral-100 flex items-center justify-center transition-colors text-neutral-300 hover:text-neutral-700"
+          title="Edit"
+        >
+          <Pencil className="size-3.5" />
+        </button>
+        <button
+          onClick={() => setConfirmRemove(true)}
           className="size-8 rounded-lg hover:bg-red-50 flex items-center justify-center transition-colors text-neutral-300 hover:text-red-500"
           title="Remove"
         >
-          <XIcon className="size-4" />
+          <Trash2 className="size-3.5" />
         </button>
       </div>
     );
@@ -263,11 +358,13 @@ function StandaloneEntries({
   list,
   entries,
   onUpdate,
+  onRemove,
   onAdd,
 }: {
   list: SignupList;
   entries: SignupEntry[];
   onUpdate: (entryId: string, values: Record<string, string>) => void;
+  onRemove: (entryId: string) => void;
   onAdd: (values: Record<string, string>) => void;
 }) {
   const requiredFields = list.fields.filter((f) => f.required);
@@ -290,6 +387,7 @@ function StandaloneEntries({
           fields={list.fields}
           complete={isComplete(entry)}
           onUpdate={(values) => onUpdate(entry.id, values)}
+          onRemove={() => onRemove(entry.id)}
         />
       ))}
       {entries.length < list.slotsNeeded && (
@@ -305,27 +403,54 @@ function SongEntry({
   fields,
   complete,
   onUpdate,
+  onRemove,
 }: {
   entry: SignupEntry;
   number: number;
   fields: SignupList["fields"];
   complete: boolean;
   onUpdate: (values: Record<string, string>) => void;
+  onRemove: () => void;
 }) {
   const [editing, setEditing] = useState(!complete);
   const [formValues, setFormValues] = useState<Record<string, string>>(
     entry.values
   );
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
   const playerName = entry.values.playerName || `Player ${number}`;
   const editableFields = fields.filter((f) => f.key !== "playerName");
 
+  if (confirmRemove) {
+    return (
+      <div className="bg-white rounded-2xl ring-1 ring-red-500/20 shadow-sm p-4">
+        <p className="text-sm text-neutral-700 mb-3">
+          Remove <strong>{playerName}</strong>&apos;s entry?
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              onRemove();
+              setConfirmRemove(false);
+            }}
+            className="h-9 px-4 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-500 transition-all"
+          >
+            Remove
+          </button>
+          <button
+            onClick={() => setConfirmRemove(false)}
+            className="h-9 px-3 rounded-xl text-neutral-500 text-sm font-medium hover:bg-neutral-100 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (complete && !editing) {
     return (
-      <div
-        className="bg-white rounded-2xl ring-1 ring-black/[0.04] shadow-sm p-4 cursor-pointer hover:ring-black/[0.08] hover:shadow-md transition-all"
-        onClick={() => setEditing(true)}
-      >
+      <div className="bg-white rounded-2xl ring-1 ring-black/[0.04] shadow-sm p-4">
         <div className="flex items-start gap-3">
           <div className="size-9 rounded-full bg-emerald-50 flex items-center justify-center text-sm font-bold text-emerald-700 shrink-0">
             {number}
@@ -342,9 +467,20 @@ function SongEntry({
               </p>
             )}
           </div>
-          <div className="size-6 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
-            <Check className="size-3.5 text-white" />
-          </div>
+          <button
+            onClick={() => setEditing(true)}
+            className="size-8 rounded-lg hover:bg-neutral-100 flex items-center justify-center transition-colors text-neutral-300 hover:text-neutral-700 shrink-0"
+            title="Edit"
+          >
+            <Pencil className="size-3.5" />
+          </button>
+          <button
+            onClick={() => setConfirmRemove(true)}
+            className="size-8 rounded-lg hover:bg-red-50 flex items-center justify-center transition-colors text-neutral-300 hover:text-red-500 shrink-0"
+            title="Remove"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
         </div>
       </div>
     );
@@ -362,7 +498,14 @@ function SongEntry({
         >
           {number}
         </div>
-        <p className="font-semibold text-neutral-900">{playerName}</p>
+        <p className="font-semibold text-neutral-900 flex-1">{playerName}</p>
+        <button
+          onClick={() => setConfirmRemove(true)}
+          className="size-8 rounded-lg hover:bg-red-50 flex items-center justify-center transition-colors text-neutral-300 hover:text-red-500 shrink-0"
+          title="Remove"
+        >
+          <Trash2 className="size-3.5" />
+        </button>
       </div>
       <div className="space-y-2 pl-12">
         {editableFields.map((field) => (

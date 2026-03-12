@@ -2,7 +2,14 @@
 // Currently backed by mock data. To switch to a real backend,
 // replace the implementations in this file without changing the signatures.
 
-import type { Team, SignupList, ListStatus, UrgencyLevel } from "@/lib/types";
+import type {
+  Team,
+  SignupList,
+  SignupEntry,
+  FieldDefinition,
+  ListStatus,
+  UrgencyLevel,
+} from "@/lib/types";
 import { teams, signupLists } from "./mock-data";
 
 export function searchTeamsByCoach(lastName: string): Team[] {
@@ -97,4 +104,125 @@ export function groupListsByDate(lists: SignupList[]): DateGroup[] {
 
 export function getStandaloneLists(lists: SignupList[]): SignupList[] {
   return lists.filter((l) => l.category === "standalone");
+}
+
+// --- Slugify helper ---
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function ensureUniqueSlug(base: string, teamId: string): string {
+  const existing = signupLists
+    .filter((l) => l.teamId === teamId)
+    .map((l) => l.slug);
+  if (!existing.includes(base)) return base;
+  let i = 2;
+  while (existing.includes(`${base}-${i}`)) i++;
+  return `${base}-${i}`;
+}
+
+// --- Auth ---
+
+export function verifyTeamPassword(
+  teamSlug: string,
+  password: string
+): boolean {
+  const team = teams.find((t) => t.slug === teamSlug);
+  if (!team) return false;
+  return team.adminPassword === password;
+}
+
+// --- List mutations ---
+
+export function createSignupList(
+  teamId: string,
+  data: {
+    name: string;
+    category: SignupList["category"];
+    date?: string;
+    time?: string;
+    location?: string;
+    note?: string;
+    slotsNeeded: number;
+    fields: FieldDefinition[];
+  }
+): SignupList {
+  const baseSlug = slugify(data.name);
+  const slug = data.date
+    ? ensureUniqueSlug(`${baseSlug}-${data.date}`, teamId)
+    : ensureUniqueSlug(baseSlug, teamId);
+
+  const list: SignupList = {
+    id: crypto.randomUUID(),
+    teamId,
+    name: data.name,
+    slug,
+    category: data.category,
+    date: data.date,
+    time: data.time,
+    location: data.location,
+    note: data.note,
+    fields: data.fields,
+    slotsNeeded: data.slotsNeeded,
+    entries: [],
+  };
+
+  signupLists.push(list);
+  return list;
+}
+
+export function updateSignupList(
+  listId: string,
+  data: Partial<
+    Omit<SignupList, "id" | "teamId" | "slug" | "entries">
+  >
+): SignupList | undefined {
+  const list = signupLists.find((l) => l.id === listId);
+  if (!list) return undefined;
+  Object.assign(list, data);
+  return list;
+}
+
+export function deleteSignupList(listId: string): void {
+  const idx = signupLists.findIndex((l) => l.id === listId);
+  if (idx !== -1) signupLists.splice(idx, 1);
+}
+
+// --- Team mutations ---
+
+export function updateTeam(
+  teamId: string,
+  data: Partial<Omit<Team, "id" | "slug">>
+): Team | undefined {
+  const team = teams.find((t) => t.id === teamId);
+  if (!team) return undefined;
+  Object.assign(team, data);
+  return team;
+}
+
+// --- Entry mutations ---
+
+export function updateSignupEntry(
+  listId: string,
+  entryId: string,
+  data: Record<string, string>
+): SignupEntry | undefined {
+  const list = signupLists.find((l) => l.id === listId);
+  if (!list) return undefined;
+  const entry = list.entries.find((e) => e.id === entryId);
+  if (!entry) return undefined;
+  entry.values = { ...entry.values, ...data };
+  return entry;
+}
+
+export function deleteSignupEntry(listId: string, entryId: string): void {
+  const list = signupLists.find((l) => l.id === listId);
+  if (!list) return;
+  const idx = list.entries.findIndex((e) => e.id === entryId);
+  if (idx !== -1) list.entries.splice(idx, 1);
 }
