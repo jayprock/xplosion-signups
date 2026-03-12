@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import type { FieldDefinition, SignupListCategory } from "@/lib/types";
 import {
   verifyAdminPassword,
+  verifySiteAdminPassword,
   getTeamBySlug,
   createSignupList,
   updateSignupList,
@@ -23,12 +24,23 @@ export async function loginAction(
   }
 
   const cookieStore = await cookies();
-  cookieStore.set(`admin_${teamSlug}`, teamSlug, {
-    httpOnly: true,
-    path: `/t/${teamSlug}`,
-    maxAge: 7 * 24 * 60 * 60,
-    sameSite: "lax",
-  });
+
+  // If they used the site admin password, set the site-wide cookie
+  if (verifySiteAdminPassword(password)) {
+    cookieStore.set("site_admin", "true", {
+      httpOnly: true,
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60,
+      sameSite: "lax",
+    });
+  } else {
+    cookieStore.set(`admin_${teamSlug}`, teamSlug, {
+      httpOnly: true,
+      path: `/t/${teamSlug}`,
+      maxAge: 7 * 24 * 60 * 60,
+      sameSite: "lax",
+    });
+  }
 
   return { success: true };
 }

@@ -1,5 +1,22 @@
 import type { Team, SignupList, FieldDefinition } from "@/lib/types";
 
+// Use globalThis to share mock data across all module instances
+// (server actions and server components may load separate copies of this module)
+const STORE_KEY = Symbol.for("x-signups-mock-store");
+
+type MockStore = {
+  teams: Team[];
+  signupLists: SignupList[];
+};
+
+function getStore(): MockStore {
+  const g = globalThis as unknown as Record<symbol, MockStore>;
+  if (!g[STORE_KEY]) {
+    g[STORE_KEY] = { teams: buildTeams(), signupLists: buildSignupLists() };
+  }
+  return g[STORE_KEY];
+}
+
 // Helper to compute dates relative to today
 function daysFromNow(days: number): string {
   const d = new Date();
@@ -27,16 +44,18 @@ const walkupSongFields: FieldDefinition[] = [
 
 // --- Teams ---
 
-export const teams: Team[] = [
-  {
-    id: "team-1",
-    name: "12U Xplosion",
-    slug: "xplosion-12u",
-    coachLastName: "Smith",
-    seasonYear: 2026,
-    adminPassword: "xplosion",
-  },
-];
+function buildTeams(): Team[] {
+  return [
+    {
+      id: "team-1",
+      name: "12U Xplosion",
+      slug: "xplosion-12u",
+      coachLastName: "Smith",
+      seasonYear: 2026,
+      adminPassword: "xplosion",
+    },
+  ];
+}
 
 // --- Dates for recurring mowing (weekly) ---
 
@@ -56,7 +75,8 @@ const dutyDate4 = daysFromNow(26);
 
 // --- Sign-up Lists ---
 
-export const signupLists: SignupList[] = [
+function buildSignupLists(): SignupList[] {
+  return [
   // ============================================================
   // MOWING — weekly recurring, 1 volunteer needed
   // ============================================================
@@ -492,4 +512,10 @@ export const signupLists: SignupList[] = [
       },
     ],
   },
-];
+  ];
+}
+
+// Exported arrays are backed by globalThis — mutations are visible across
+// all module instances within the same Node.js process.
+export const teams: Team[] = getStore().teams;
+export const signupLists: SignupList[] = getStore().signupLists;

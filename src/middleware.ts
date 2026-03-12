@@ -3,7 +3,18 @@ import { NextRequest, NextResponse } from "next/server";
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Extract team slug from /t/[teamSlug]/admin/...
+  // --- /teams/new: requires site_admin cookie ---
+  if (pathname === "/teams/new") {
+    const siteAdmin = request.cookies.get("site_admin");
+    if (!siteAdmin?.value) {
+      return NextResponse.redirect(
+        new URL("/teams/new/login", request.url)
+      );
+    }
+    return NextResponse.next();
+  }
+
+  // --- /t/[teamSlug]/admin/*: requires team or site admin cookie ---
   const match = pathname.match(/^\/t\/([^/]+)\/admin/);
   if (!match) return NextResponse.next();
 
@@ -14,18 +25,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for admin cookie
-  const cookie = request.cookies.get(`admin_${teamSlug}`);
+  // Site admin cookie grants access to all teams
+  const siteAdmin = request.cookies.get("site_admin");
+  if (siteAdmin?.value) return NextResponse.next();
 
-  if (!cookie?.value) {
-    return NextResponse.redirect(
-      new URL(`/t/${teamSlug}/admin/login`, request.url)
-    );
-  }
+  // Team-specific admin cookie
+  const teamCookie = request.cookies.get(`admin_${teamSlug}`);
+  if (teamCookie?.value) return NextResponse.next();
 
-  return NextResponse.next();
+  return NextResponse.redirect(
+    new URL(`/t/${teamSlug}/admin/login`, request.url)
+  );
 }
 
 export const config = {
-  matcher: ["/t/:teamSlug/admin/:path*"],
+  matcher: ["/t/:teamSlug/admin/:path*", "/teams/new"],
 };

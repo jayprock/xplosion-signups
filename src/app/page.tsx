@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CoachSearch } from "@/components/coach-search";
 
 export default function Home() {
@@ -68,12 +69,12 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="text-center py-6 border-t border-white/[0.06]">
-        <p className="text-neutral-700 text-sm">
-          Are you a coach?{" "}
-          <span className="text-red-600 font-medium cursor-pointer hover:text-red-500 transition-colors">
-            Add your team
-          </span>
-        </p>
+        <Link
+          href="/teams/new/login"
+          className="text-neutral-700 text-sm hover:text-neutral-500 transition-colors"
+        >
+          Site Admin
+        </Link>
       </footer>
     </div>
   );
