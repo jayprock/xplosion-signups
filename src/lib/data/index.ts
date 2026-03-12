@@ -2,8 +2,17 @@
 // Currently backed by mock data. To switch to a real backend,
 // replace the implementations in this file without changing the signatures.
 
-import type { Team, SignupList, ListStatus, UrgencyLevel } from "@/lib/types";
+import type {
+  Team,
+  SignupList,
+  SignupEntry,
+  FieldDefinition,
+  SignupListCategory,
+  ListStatus,
+  UrgencyLevel,
+} from "@/lib/types";
 import { teams, signupLists } from "./mock-data";
+import { slugify } from "@/lib/utils";
 
 export function searchTeamsByCoach(lastName: string): Team[] {
   const query = lastName.toLowerCase().trim();
@@ -97,4 +106,150 @@ export function groupListsByDate(lists: SignupList[]): DateGroup[] {
 
 export function getStandaloneLists(lists: SignupList[]): SignupList[] {
   return lists.filter((l) => l.category === "standalone");
+}
+
+// --- Auth ---
+
+export function verifyAdminPassword(
+  teamSlug: string,
+  password: string
+): boolean {
+  const team = getTeamBySlug(teamSlug);
+  if (!team) return false;
+  return team.adminPassword === password;
+}
+
+// --- Mutation types ---
+
+export type CreateListInput = {
+  name: string;
+  category: SignupListCategory;
+  date?: string;
+  time?: string;
+  location?: string;
+  note?: string;
+  slotsNeeded: number;
+  fields: FieldDefinition[];
+};
+
+export type UpdateListInput = {
+  name?: string;
+  category?: SignupListCategory;
+  date?: string;
+  time?: string;
+  location?: string;
+  note?: string;
+  slotsNeeded?: number;
+  fields?: FieldDefinition[];
+};
+
+export type UpdateTeamInput = {
+  name?: string;
+  seasonYear?: number;
+  adminPassword?: string;
+};
+
+// --- Mutations ---
+
+export function createSignupList(
+  teamId: string,
+  data: CreateListInput
+): SignupList {
+  const baseSlug = slugify(data.name);
+  const dateSuffix = data.date ? `-${data.date}` : "";
+  let slug = baseSlug + dateSuffix;
+
+  // Ensure slug uniqueness within the team
+  const existing = signupLists.filter(
+    (l) => l.teamId === teamId && l.slug === slug
+  );
+  if (existing.length > 0) {
+    slug = `${slug}-${Date.now()}`;
+  }
+
+  const newList: SignupList = {
+    id: `list-${Date.now()}`,
+    teamId,
+    name: data.name,
+    slug,
+    category: data.category,
+    date: data.date,
+    time: data.time,
+    location: data.location,
+    note: data.note,
+    fields: data.fields,
+    slotsNeeded: data.slotsNeeded,
+    entries: [],
+  };
+
+  signupLists.push(newList);
+  return newList;
+}
+
+export function updateSignupList(
+  listId: string,
+  data: UpdateListInput
+): SignupList | undefined {
+  const list = signupLists.find((l) => l.id === listId);
+  if (!list) return undefined;
+
+  if (data.name !== undefined) list.name = data.name;
+  if (data.category !== undefined) list.category = data.category;
+  if (data.date !== undefined) list.date = data.date;
+  if (data.time !== undefined) list.time = data.time;
+  if (data.location !== undefined) list.location = data.location;
+  if (data.note !== undefined) list.note = data.note;
+  if (data.slotsNeeded !== undefined) list.slotsNeeded = data.slotsNeeded;
+  if (data.fields !== undefined) list.fields = data.fields;
+
+  return list;
+}
+
+export function deleteSignupList(listId: string): boolean {
+  const idx = signupLists.findIndex((l) => l.id === listId);
+  if (idx === -1) return false;
+  signupLists.splice(idx, 1);
+  return true;
+}
+
+export function updateTeam(
+  teamId: string,
+  data: UpdateTeamInput
+): Team | undefined {
+  const team = teams.find((t) => t.id === teamId);
+  if (!team) return undefined;
+
+  if (data.name !== undefined) team.name = data.name;
+  if (data.seasonYear !== undefined) team.seasonYear = data.seasonYear;
+  if (data.adminPassword !== undefined) team.adminPassword = data.adminPassword;
+
+  return team;
+}
+
+export function updateSignupEntry(
+  listId: string,
+  entryId: string,
+  values: Record<string, string>
+): SignupEntry | undefined {
+  const list = signupLists.find((l) => l.id === listId);
+  if (!list) return undefined;
+
+  const entry = list.entries.find((e) => e.id === entryId);
+  if (!entry) return undefined;
+
+  entry.values = { ...entry.values, ...values };
+  return entry;
+}
+
+export function deleteSignupEntry(
+  listId: string,
+  entryId: string
+): boolean {
+  const list = signupLists.find((l) => l.id === listId);
+  if (!list) return false;
+
+  const idx = list.entries.findIndex((e) => e.id === entryId);
+  if (idx === -1) return false;
+  list.entries.splice(idx, 1);
+  return true;
 }

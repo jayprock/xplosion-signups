@@ -8,6 +8,7 @@ export type Team = {
   slug: string;
   coachLastName: string;
   seasonYear: number;
+  adminPassword: string;
 };
 
 export type SignupListCategory = "dated" | "standalone";
