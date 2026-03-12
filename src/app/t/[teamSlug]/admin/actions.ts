@@ -42,13 +42,38 @@ export type CreateListInput = {
   note?: string;
   slotsNeeded: number;
   fields: FieldDefinition[];
+  recurring?: {
+    untilDate: string; // ISO date
+  };
 };
+
+function getWeeklyDates(startDate: string, untilDate: string): string[] {
+  const dates: string[] = [];
+  const current = new Date(startDate + "T12:00:00");
+  const end = new Date(untilDate + "T12:00:00");
+
+  while (current <= end) {
+    dates.push(current.toISOString().split("T")[0]);
+    current.setDate(current.getDate() + 7);
+  }
+  return dates;
+}
 
 export async function createListAction(teamSlug: string, data: CreateListInput) {
   const team = getTeamBySlug(teamSlug);
   if (!team) throw new Error("Team not found");
 
-  createSignupList(team.id, data);
+  const { recurring, ...listData } = data;
+
+  if (recurring && data.category === "dated" && data.date) {
+    const dates = getWeeklyDates(data.date, recurring.untilDate);
+    for (const d of dates) {
+      createSignupList(team.id, { ...listData, date: d });
+    }
+  } else {
+    createSignupList(team.id, listData);
+  }
+
   revalidatePath(`/t/${teamSlug}`);
   redirect(`/t/${teamSlug}/admin`);
 }

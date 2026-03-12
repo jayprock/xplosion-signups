@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { FieldDefinition, SignupList, SignupListCategory } from "@/lib/types";
 import { createListAction, updateListAction } from "./actions";
 import type { CreateListInput } from "./actions";
-import { ArrowLeft, Plus, Trash2, GripVertical } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Repeat } from "lucide-react";
 
 type ListFormProps = {
   teamSlug: string;
@@ -46,6 +46,8 @@ export function ListForm(props: ListFormProps) {
       { key: "name", label: "Your Name", type: "text", required: true },
     ]
   );
+  const [recurring, setRecurring] = useState(false);
+  const [untilDate, setUntilDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   function addField() {
@@ -87,6 +89,10 @@ export function ListForm(props: ListFormProps) {
       note: note || undefined,
       slotsNeeded: parseInt(slotsNeeded, 10),
       fields: fields.filter((f) => f.label.trim() !== ""),
+      recurring:
+        !isEdit && recurring && category === "dated" && untilDate
+          ? { untilDate }
+          : undefined,
     };
 
     if (isEdit) {
@@ -221,6 +227,63 @@ export function ListForm(props: ListFormProps) {
                     className="w-full h-10 rounded-xl border border-neutral-200 px-3 text-sm focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all bg-neutral-50 focus:bg-white"
                   />
                 </div>
+
+                {/* Recurring toggle (create mode only) */}
+                {!isEdit && (
+                  <div className="pt-1">
+                    <label className="flex items-center gap-2.5 cursor-pointer">
+                      <div
+                        onClick={() => setRecurring(!recurring)}
+                        className={`relative w-10 h-6 rounded-full transition-colors ${
+                          recurring ? "bg-red-600" : "bg-neutral-200"
+                        }`}
+                      >
+                        <div
+                          className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform ${
+                            recurring ? "translate-x-4" : ""
+                          }`}
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Repeat className="size-3.5 text-neutral-500" />
+                        <span className="text-sm font-medium text-neutral-700">
+                          Repeat weekly
+                        </span>
+                      </div>
+                    </label>
+
+                    {recurring && (
+                      <div className="mt-3 ml-[52px]">
+                        <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                          Until
+                        </label>
+                        <input
+                          type="date"
+                          value={untilDate}
+                          onChange={(e) => setUntilDate(e.target.value)}
+                          min={date || undefined}
+                          className="w-full h-10 rounded-xl border border-neutral-200 px-3 text-sm focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all bg-neutral-50 focus:bg-white"
+                        />
+                        {date && untilDate && (
+                          <p className="text-xs text-neutral-500 mt-1.5">
+                            This will create{" "}
+                            <span className="font-semibold text-neutral-700">
+                              {Math.max(
+                                1,
+                                Math.floor(
+                                  (new Date(untilDate + "T12:00:00").getTime() -
+                                    new Date(date + "T12:00:00").getTime()) /
+                                    (7 * 24 * 60 * 60 * 1000)
+                                ) + 1
+                              )}
+                            </span>{" "}
+                            lists, one per week.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -255,19 +318,9 @@ export function ListForm(props: ListFormProps) {
 
           {/* Custom fields */}
           <div className="bg-white rounded-2xl ring-1 ring-black/[0.04] shadow-sm p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-400">
-                Form Fields
-              </h2>
-              <button
-                type="button"
-                onClick={addField}
-                className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-500 transition-colors"
-              >
-                <Plus className="size-3" />
-                Add Field
-              </button>
-            </div>
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-400">
+              Form Fields
+            </h2>
 
             {fields.length === 0 && (
               <p className="text-sm text-neutral-500 text-center py-4">
@@ -279,10 +332,9 @@ export function ListForm(props: ListFormProps) {
               {fields.map((field, index) => (
                 <div
                   key={index}
-                  className="flex items-start gap-2 p-3 rounded-xl bg-neutral-50 ring-1 ring-black/[0.04]"
+                  className="flex items-center gap-2 p-3 rounded-xl bg-neutral-50 ring-1 ring-black/[0.04]"
                 >
-                  <GripVertical className="size-4 text-neutral-300 mt-2.5 shrink-0" />
-                  <div className="flex-1 space-y-2">
+                  <div className="flex-1">
                     <input
                       value={field.label}
                       onChange={(e) =>
@@ -291,42 +343,37 @@ export function ListForm(props: ListFormProps) {
                       placeholder="Field label"
                       className="w-full h-9 rounded-lg border border-neutral-200 px-3 text-sm focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all bg-white"
                     />
-                    <div className="flex items-center gap-3">
-                      <select
-                        value={field.type}
-                        onChange={(e) =>
-                          updateField(index, {
-                            type: e.target.value as "text" | "textarea",
-                          })
-                        }
-                        className="h-8 rounded-lg border border-neutral-200 px-2 text-xs bg-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
-                      >
-                        <option value="text">Text</option>
-                        <option value="textarea">Textarea</option>
-                      </select>
-                      <label className="flex items-center gap-1.5 text-xs text-neutral-600 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={field.required}
-                          onChange={(e) =>
-                            updateField(index, { required: e.target.checked })
-                          }
-                          className="rounded border-neutral-300 text-red-600 focus:ring-red-500"
-                        />
-                        Required
-                      </label>
-                    </div>
                   </div>
+                  <label className="flex items-center gap-1.5 text-xs text-neutral-600 cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={field.required}
+                      onChange={(e) =>
+                        updateField(index, { required: e.target.checked })
+                      }
+                      className="rounded border-neutral-300 text-red-600 focus:ring-red-500"
+                    />
+                    Required
+                  </label>
                   <button
                     type="button"
                     onClick={() => removeField(index)}
-                    className="size-8 rounded-lg hover:bg-red-50 flex items-center justify-center transition-colors text-neutral-300 hover:text-red-500 shrink-0 mt-0.5"
+                    className="size-8 rounded-lg hover:bg-red-50 flex items-center justify-center transition-colors text-neutral-300 hover:text-red-500 shrink-0"
                   >
                     <Trash2 className="size-3.5" />
                   </button>
                 </div>
               ))}
             </div>
+
+            <button
+              type="button"
+              onClick={addField}
+              className="w-full h-10 rounded-xl border-2 border-dashed border-neutral-200 text-sm font-medium text-neutral-500 hover:border-neutral-300 hover:text-neutral-700 hover:bg-neutral-50 transition-all inline-flex items-center justify-center gap-1.5"
+            >
+              <Plus className="size-4" />
+              Add Field
+            </button>
           </div>
 
           {/* Show signup count for edit mode */}
