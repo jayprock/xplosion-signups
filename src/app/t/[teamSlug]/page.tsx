@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Music,
   Calendar,
+  Shield,
 } from "lucide-react";
 
 function formatDate(dateStr: string): string {
@@ -60,9 +61,18 @@ export default async function TeamDashboardPage({
           <h1 className="font-heading text-4xl tracking-tight leading-none">
             {team.name.toUpperCase()}
           </h1>
-          <p className="text-neutral-500 text-sm mt-1">
-            Coach {team.coachLastName} &middot; {team.seasonYear}
-          </p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-neutral-500 text-sm">
+              Coach {team.coachLastName} &middot; {team.seasonYear}
+            </p>
+            <Link
+              href={`/t/${teamSlug}/admin`}
+              className="inline-flex items-center gap-1.5 text-neutral-600 hover:text-white text-xs font-medium transition-colors"
+            >
+              <Shield className="size-3" />
+              Admin
+            </Link>
+          </div>
         </div>
       </header>
 
