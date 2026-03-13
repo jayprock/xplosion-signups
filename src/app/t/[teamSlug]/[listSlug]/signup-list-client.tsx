@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Team, SignupList, SignupEntry } from "@/lib/types";
-import { getListStatus } from "@/lib/data";
+import { getListStatus } from "@/lib/data/helpers";
+import { signupAction, updateEntryAction, removeEntryAction } from "./actions";
 import { StatusBadge } from "@/components/status-badge";
 import {
   ArrowLeft,
@@ -36,6 +37,7 @@ export function SignupListClient({
   const [entries, setEntries] = useState<SignupEntry[]>(() =>
     initialList.entries.map((e) => ({ ...e, values: { ...e.values } }))
   );
+  const [slotError, setSlotError] = useState<string | null>(null);
 
   const currentList = { ...initialList, entries };
   const status = getListStatus(currentList);
@@ -69,6 +71,13 @@ export function SignupListClient({
             </span>
           </div>
         </div>
+
+        {/* Slot error message */}
+        {slotError && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+            {slotError}
+          </div>
+        )}
 
         {/* Date/location info for dated sign-ups */}
         {currentList.date && (
@@ -104,27 +113,33 @@ export function SignupListClient({
           <EventTiedSlots
             list={currentList}
             entries={entries}
-            onSignUp={(slotIndex, name) => {
-              setEntries((prev) => [
-                ...prev,
-                {
-                  id: crypto.randomUUID(),
-                  slotIndex,
-                  values: { name },
-                  signedUpAt: new Date().toISOString(),
-                },
-              ]);
+            onSignUp={async (slotIndex, name) => {
+              setSlotError(null);
+              const result = await signupAction(
+                team.slug,
+                initialList.id,
+                slotIndex,
+                { name }
+              );
+              if (result.error) {
+                setSlotError(result.error);
+              } else if (result.entry) {
+                setEntries((prev) => [...prev, result.entry!]);
+              }
             }}
-            onUpdate={(entryId, values) => {
+            onUpdate={async (entryId, values) => {
+              const updated = await updateEntryAction(
+                team.slug,
+                initialList.id,
+                entryId,
+                values
+              );
               setEntries((prev) =>
-                prev.map((e) =>
-                  e.id === entryId
-                    ? { ...e, values: { ...e.values, ...values } }
-                    : e
-                )
+                prev.map((e) => (e.id === entryId ? updated : e))
               );
             }}
-            onRemove={(entryId) => {
+            onRemove={async (entryId) => {
+              await removeEntryAction(team.slug, initialList.id, entryId);
               setEntries((prev) => prev.filter((e) => e.id !== entryId));
             }}
           />
@@ -132,28 +147,35 @@ export function SignupListClient({
           <StandaloneEntries
             list={currentList}
             entries={entries}
-            onUpdate={(entryId, values) => {
+            onUpdate={async (entryId, values) => {
+              const updated = await updateEntryAction(
+                team.slug,
+                initialList.id,
+                entryId,
+                values
+              );
               setEntries((prev) =>
-                prev.map((e) =>
-                  e.id === entryId
-                    ? { ...e, values: { ...e.values, ...values } }
-                    : e
-                )
+                prev.map((e) => (e.id === entryId ? updated : e))
               );
             }}
-            onRemove={(entryId) => {
+            onRemove={async (entryId) => {
+              await removeEntryAction(team.slug, initialList.id, entryId);
               setEntries((prev) => prev.filter((e) => e.id !== entryId));
             }}
-            onAdd={(values) => {
-              setEntries((prev) => [
-                ...prev,
-                {
-                  id: crypto.randomUUID(),
-                  slotIndex: prev.length,
-                  values,
-                  signedUpAt: new Date().toISOString(),
-                },
-              ]);
+            onAdd={async (values) => {
+              setSlotError(null);
+              const slotIndex = entries.length;
+              const result = await signupAction(
+                team.slug,
+                initialList.id,
+                slotIndex,
+                values
+              );
+              if (result.error) {
+                setSlotError(result.error);
+              } else if (result.entry) {
+                setEntries((prev) => [...prev, result.entry!]);
+              }
             }}
           />
         )}

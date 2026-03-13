@@ -8,7 +8,7 @@ export default async function SettingsPage({
   params: Promise<{ teamSlug: string }>;
 }) {
   const { teamSlug } = await params;
-  const team = getTeamBySlug(teamSlug);
+  const team = await getTeamBySlug(teamSlug);
   if (!team) notFound();
 
   return <SettingsForm team={team} />;

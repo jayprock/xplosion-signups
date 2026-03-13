@@ -38,10 +38,10 @@ export default async function TeamDashboardPage({
   params: Promise<{ teamSlug: string }>;
 }) {
   const { teamSlug } = await params;
-  const team = getTeamBySlug(teamSlug);
+  const team = await getTeamBySlug(teamSlug);
   if (!team) notFound();
 
-  const allLists = getSignupListsForTeam(team.id);
+  const allLists = await getSignupListsForTeam(team.id);
   const dateGroups = groupListsByDate(allLists);
   const standaloneLists = getStandaloneLists(allLists);
 

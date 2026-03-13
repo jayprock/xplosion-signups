@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { searchTeamsByCoach } from "@/lib/data";
+import { searchTeamsAction } from "@/app/actions";
 import { Search, ArrowRight } from "lucide-react";
 
 export function CoachSearch() {
@@ -20,13 +20,12 @@ export function CoachSearch() {
       return;
     }
 
-    const results = searchTeamsByCoach(query);
-    if (results.length === 0) {
-      setError("No team found \u2014 check the spelling and try again");
-      return;
-    }
-
-    startTransition(() => {
+    startTransition(async () => {
+      const results = await searchTeamsAction(query);
+      if (results.length === 0) {
+        setError("No team found \u2014 check the spelling and try again");
+        return;
+      }
       router.push(`/t/${results[0].slug}`);
     });
   }

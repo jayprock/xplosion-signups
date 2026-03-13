@@ -8,10 +8,10 @@ export default async function SignupListPage({
   params: Promise<{ teamSlug: string; listSlug: string }>;
 }) {
   const { teamSlug, listSlug } = await params;
-  const team = getTeamBySlug(teamSlug);
+  const team = await getTeamBySlug(teamSlug);
   if (!team) notFound();
 
-  const list = getSignupListBySlug(team.id, listSlug);
+  const list = await getSignupListBySlug(team.id, listSlug);
   if (!list) notFound();
 
   return <SignupListClient team={team} list={list} />;
