@@ -49,7 +49,7 @@ export function SignupListClient({
         <div className="h-1 bg-gradient-to-r from-red-900 via-red-500 to-red-900" />
         <div className="max-w-lg mx-auto px-4 py-4">
           <Link
-            href={`/t/${team.slug}`}
+            href={`/${team.slug}`}
             className="inline-flex items-center gap-1.5 text-neutral-500 hover:text-white transition-colors text-sm"
           >
             <ArrowLeft className="size-3.5" />

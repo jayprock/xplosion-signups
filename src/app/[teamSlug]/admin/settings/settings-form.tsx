@@ -47,7 +47,7 @@ export function SettingsForm({
         <div className="h-1 bg-gradient-to-r from-red-900 via-red-500 to-red-900" />
         <div className="max-w-lg mx-auto px-4 py-4">
           <Link
-            href={`/t/${team.slug}/admin`}
+            href={`/${team.slug}/admin`}
             className="inline-flex items-center gap-1.5 text-neutral-500 hover:text-white transition-colors text-sm"
           >
             <ArrowLeft className="size-3.5" />
@@ -129,7 +129,7 @@ export function SettingsForm({
 
           <div className="flex gap-3">
             <Link
-              href={`/t/${team.slug}/admin`}
+              href={`/${team.slug}/admin`}
               className="flex-1 h-11 rounded-xl text-neutral-700 text-sm font-medium hover:bg-neutral-200 transition-colors flex items-center justify-center bg-neutral-100"
             >
               Cancel

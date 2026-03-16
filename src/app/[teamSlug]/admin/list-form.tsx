@@ -132,7 +132,7 @@ export function ListForm(props: ListFormProps) {
             </button>
           ) : (
             <Link
-              href={`/t/${props.teamSlug}/admin`}
+              href={`/${props.teamSlug}/admin`}
               className="inline-flex items-center gap-1.5 text-neutral-500 hover:text-white transition-colors text-sm"
             >
               <ArrowLeft className="size-3.5" />
@@ -439,7 +439,7 @@ export function ListForm(props: ListFormProps) {
           {/* Submit */}
           <div className="flex gap-3">
             <Link
-              href={`/t/${props.teamSlug}/admin`}
+              href={`/${props.teamSlug}/admin`}
               className="flex-1 h-11 rounded-xl text-neutral-700 text-sm font-medium hover:bg-neutral-200 transition-colors flex items-center justify-center bg-neutral-100"
             >
               Cancel

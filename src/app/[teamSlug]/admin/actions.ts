@@ -39,7 +39,7 @@ export async function loginAction(
   } else {
     cookieStore.set(`admin_${teamSlug}`, teamSlug, {
       httpOnly: true,
-      path: `/t/${teamSlug}`,
+      path: `/${teamSlug}`,
       maxAge: 7 * 24 * 60 * 60,
       sameSite: "lax",
     });
@@ -93,8 +93,8 @@ export async function createListAction(teamSlug: string, data: CreateListInput) 
     }
   }
 
-  revalidatePath(`/t/${teamSlug}`);
-  redirect(`/t/${teamSlug}/admin`);
+  revalidatePath(`/${teamSlug}`);
+  redirect(`/${teamSlug}/admin`);
 }
 
 export type UpdateListInput = {
@@ -114,13 +114,13 @@ export async function updateListAction(
   data: UpdateListInput
 ) {
   await updateSignupList(listId, data);
-  revalidatePath(`/t/${teamSlug}`);
-  redirect(`/t/${teamSlug}/admin`);
+  revalidatePath(`/${teamSlug}`);
+  redirect(`/${teamSlug}/admin`);
 }
 
 export async function deleteListAction(teamSlug: string, listId: string) {
   await deleteSignupList(listId);
-  revalidatePath(`/t/${teamSlug}`);
+  revalidatePath(`/${teamSlug}`);
 }
 
 export type UpdateTeamInput = {
@@ -137,8 +137,8 @@ export async function updateTeamAction(
   if (!team) throw new Error("Team not found");
 
   await updateTeam(team.id, data);
-  revalidatePath(`/t/${teamSlug}`);
-  redirect(`/t/${teamSlug}/admin/settings`);
+  revalidatePath(`/${teamSlug}`);
+  redirect(`/${teamSlug}/admin/settings`);
 }
 
 // --- Player (roster) actions ---
@@ -151,7 +151,7 @@ export async function addPlayerAction(
   if (!team) throw new Error("Team not found");
 
   const player = await addPlayer(team.id, name.trim());
-  revalidatePath(`/t/${teamSlug}`);
+  revalidatePath(`/${teamSlug}`);
   return { id: player.id, name: player.name };
 }
 
@@ -160,5 +160,5 @@ export async function removePlayerAction(
   playerId: string
 ): Promise<void> {
   await removePlayer(playerId);
-  revalidatePath(`/t/${teamSlug}`);
+  revalidatePath(`/${teamSlug}`);
 }

@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
     const result = await loginAction(params.teamSlug, password);
 
     if (result.success) {
-      router.push(`/t/${params.teamSlug}/admin`);
+      router.push(`/${params.teamSlug}/admin`);
     } else {
       setError(result.error || "Login failed");
       setLoading(false);
@@ -34,7 +34,7 @@ export default function AdminLoginPage() {
 
       <div className="max-w-lg mx-auto px-4 py-4 w-full">
         <Link
-          href={`/t/${params.teamSlug}`}
+          href={`/${params.teamSlug}`}
           className="inline-flex items-center gap-1.5 text-neutral-500 hover:text-white transition-colors text-sm"
         >
           <ArrowLeft className="size-3.5" />

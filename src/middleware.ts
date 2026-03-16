@@ -14,14 +14,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // --- /t/[teamSlug]/admin/*: requires team or site admin cookie ---
-  const match = pathname.match(/^\/t\/([^/]+)\/admin/);
+  // --- /[teamSlug]/admin/*: requires team or site admin cookie ---
+  const match = pathname.match(/^\/([^/]+)\/admin/);
   if (!match) return NextResponse.next();
 
   const teamSlug = match[1];
 
+  // Skip paths that belong to other top-level routes
+  if (teamSlug === "teams") return NextResponse.next();
+
   // Don't block the login page itself
-  if (pathname === `/t/${teamSlug}/admin/login`) {
+  if (pathname === `/${teamSlug}/admin/login`) {
     return NextResponse.next();
   }
 
@@ -34,10 +37,10 @@ export function middleware(request: NextRequest) {
   if (teamCookie?.value) return NextResponse.next();
 
   return NextResponse.redirect(
-    new URL(`/t/${teamSlug}/admin/login`, request.url)
+    new URL(`/${teamSlug}/admin/login`, request.url)
   );
 }
 
 export const config = {
-  matcher: ["/t/:teamSlug/admin/:path*", "/teams/new"],
+  matcher: ["/:teamSlug/admin/:path*", "/teams/new"],
 };
