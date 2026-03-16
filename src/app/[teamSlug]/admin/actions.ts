@@ -12,6 +12,9 @@ import {
   updateSignupList,
   deleteSignupList,
   updateTeam,
+  addPlayer,
+  removePlayer,
+  bulkCreateEntries,
 } from "@/lib/data";
 
 export async function loginAction(
@@ -36,7 +39,7 @@ export async function loginAction(
   } else {
     cookieStore.set(`admin_${teamSlug}`, teamSlug, {
       httpOnly: true,
-      path: `/t/${teamSlug}`,
+      path: `/${teamSlug}`,
       maxAge: 7 * 24 * 60 * 60,
       sameSite: "lax",
     });
@@ -57,6 +60,7 @@ export type CreateListInput = {
   recurring?: {
     untilDate: string; // ISO date
   };
+  autoEntries?: string[]; // player names to auto-create entries for
 };
 
 function getWeeklyDates(startDate: string, untilDate: string): string[] {
@@ -75,7 +79,7 @@ export async function createListAction(teamSlug: string, data: CreateListInput) 
   const team = await getTeamBySlug(teamSlug);
   if (!team) throw new Error("Team not found");
 
-  const { recurring, ...listData } = data;
+  const { recurring, autoEntries, ...listData } = data;
 
   if (recurring && data.category === "dated" && data.date) {
     const dates = getWeeklyDates(data.date, recurring.untilDate);
@@ -83,11 +87,14 @@ export async function createListAction(teamSlug: string, data: CreateListInput) 
       await createSignupList(team.id, { ...listData, date: d });
     }
   } else {
-    await createSignupList(team.id, listData);
+    const list = await createSignupList(team.id, listData);
+    if (autoEntries && autoEntries.length > 0) {
+      await bulkCreateEntries(list.id, autoEntries);
+    }
   }
 
-  revalidatePath(`/t/${teamSlug}`);
-  redirect(`/t/${teamSlug}/admin`);
+  revalidatePath(`/${teamSlug}`);
+  redirect(`/${teamSlug}/admin`);
 }
 
 export type UpdateListInput = {
@@ -107,13 +114,13 @@ export async function updateListAction(
   data: UpdateListInput
 ) {
   await updateSignupList(listId, data);
-  revalidatePath(`/t/${teamSlug}`);
-  redirect(`/t/${teamSlug}/admin`);
+  revalidatePath(`/${teamSlug}`);
+  redirect(`/${teamSlug}/admin`);
 }
 
 export async function deleteListAction(teamSlug: string, listId: string) {
   await deleteSignupList(listId);
-  revalidatePath(`/t/${teamSlug}`);
+  revalidatePath(`/${teamSlug}`);
 }
 
 export type UpdateTeamInput = {
@@ -130,6 +137,28 @@ export async function updateTeamAction(
   if (!team) throw new Error("Team not found");
 
   await updateTeam(team.id, data);
-  revalidatePath(`/t/${teamSlug}`);
-  redirect(`/t/${teamSlug}/admin/settings`);
+  revalidatePath(`/${teamSlug}`);
+  redirect(`/${teamSlug}/admin/settings`);
+}
+
+// --- Player (roster) actions ---
+
+export async function addPlayerAction(
+  teamSlug: string,
+  name: string
+): Promise<{ id: string; name: string }> {
+  const team = await getTeamBySlug(teamSlug);
+  if (!team) throw new Error("Team not found");
+
+  const player = await addPlayer(team.id, name.trim());
+  revalidatePath(`/${teamSlug}`);
+  return { id: player.id, name: player.name };
+}
+
+export async function removePlayerAction(
+  teamSlug: string,
+  playerId: string
+): Promise<void> {
+  await removePlayer(playerId);
+  revalidatePath(`/${teamSlug}`);
 }

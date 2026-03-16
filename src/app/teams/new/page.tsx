@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createTeamAction } from "./actions";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus, X as XIcon } from "lucide-react";
 
 export default function NewTeamPage() {
   const router = useRouter();
@@ -14,6 +14,8 @@ export default function NewTeamPage() {
     new Date().getFullYear().toString()
   );
   const [adminPassword, setAdminPassword] = useState("");
+  const [playerNames, setPlayerNames] = useState<string[]>([]);
+  const [newPlayerName, setNewPlayerName] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -28,10 +30,11 @@ export default function NewTeamPage() {
       coachLastName: coachLastName.trim(),
       seasonYear: parseInt(seasonYear, 10),
       adminPassword,
+      playerNames: playerNames.length > 0 ? playerNames : undefined,
     });
 
     if (result.teamSlug) {
-      router.push(`/t/${result.teamSlug}/admin`);
+      router.push(`/${result.teamSlug}/admin`);
     }
   }
 
@@ -125,6 +128,71 @@ export default function NewTeamPage() {
                 Share this with anyone who needs to manage signup lists for this
                 team.
               </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl ring-1 ring-black/[0.04] shadow-sm p-4 space-y-4">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-400">
+              Roster ({playerNames.length})
+            </h2>
+
+            {playerNames.length === 0 && (
+              <p className="text-sm text-neutral-500 text-center py-2">
+                Add your players now, or you can do this later in Team Settings.
+              </p>
+            )}
+
+            {playerNames.length > 0 && (
+              <div className="space-y-1.5">
+                {playerNames.map((pName, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 h-9 px-3 rounded-lg bg-neutral-50 group"
+                  >
+                    <span className="flex-1 text-sm text-neutral-800 truncate">
+                      {pName}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPlayerNames((prev) => prev.filter((_, j) => j !== i))
+                      }
+                      className="size-6 rounded flex items-center justify-center text-neutral-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <XIcon className="size-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <input
+                value={newPlayerName}
+                onChange={(e) => setNewPlayerName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newPlayerName.trim()) {
+                    e.preventDefault();
+                    setPlayerNames((prev) => [...prev, newPlayerName.trim()]);
+                    setNewPlayerName("");
+                  }
+                }}
+                placeholder="Player name"
+                className="flex-1 h-9 rounded-lg border border-neutral-200 px-3 text-sm focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all bg-neutral-50 focus:bg-white"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (newPlayerName.trim()) {
+                    setPlayerNames((prev) => [...prev, newPlayerName.trim()]);
+                    setNewPlayerName("");
+                  }
+                }}
+                disabled={!newPlayerName.trim()}
+                className="h-9 px-3 rounded-lg bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all shrink-0"
+              >
+                <Plus className="size-4" />
+              </button>
             </div>
           </div>
 

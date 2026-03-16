@@ -49,6 +49,12 @@ export type SignupEntry = {
   signedUpAt: string; // ISO datetime
 };
 
+export type Player = {
+  id: string;
+  teamId: string;
+  name: string;
+};
+
 // Status model for the dashboard
 
 export type UrgencyLevel =

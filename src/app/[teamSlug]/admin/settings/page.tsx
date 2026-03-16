@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getTeamBySlug } from "@/lib/data";
+import { getTeamBySlug, getPlayersForTeam } from "@/lib/data";
 import { SettingsForm } from "./settings-form";
 
 export default async function SettingsPage({
@@ -11,5 +11,7 @@ export default async function SettingsPage({
   const team = await getTeamBySlug(teamSlug);
   if (!team) notFound();
 
-  return <SettingsForm team={team} />;
+  const players = await getPlayersForTeam(team.id);
+
+  return <SettingsForm team={team} players={players} />;
 }

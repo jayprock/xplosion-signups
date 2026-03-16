@@ -16,7 +16,7 @@ export async function signupAction(
 ): Promise<{ entry?: SignupEntry; error?: string }> {
   const result = await claimSignupSlot(listId, slotIndex, values);
   if (result.entry) {
-    revalidatePath(`/t/${teamSlug}`);
+    revalidatePath(`/${teamSlug}`);
   }
   return result;
 }
@@ -28,7 +28,7 @@ export async function updateEntryAction(
   values: Record<string, string>
 ): Promise<SignupEntry> {
   const entry = await updateSignupEntry(listId, entryId, values);
-  revalidatePath(`/t/${teamSlug}`);
+  revalidatePath(`/${teamSlug}`);
   return entry;
 }
 
@@ -38,5 +38,5 @@ export async function removeEntryAction(
   entryId: string
 ): Promise<void> {
   await deleteSignupEntry(listId, entryId);
-  revalidatePath(`/t/${teamSlug}`);
+  revalidatePath(`/${teamSlug}`);
 }

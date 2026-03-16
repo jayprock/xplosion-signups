@@ -66,7 +66,7 @@ export default async function TeamDashboardPage({
               Coach {team.coachLastName} &middot; {team.seasonYear}
             </p>
             <Link
-              href={`/t/${teamSlug}/admin`}
+              href={`/${teamSlug}/admin`}
               className="inline-flex items-center gap-1.5 text-neutral-600 hover:text-white text-xs font-medium transition-colors"
             >
               <Shield className="size-3" />
@@ -104,7 +104,7 @@ export default async function TeamDashboardPage({
               return (
                 <Link
                   key={list.id}
-                  href={`/t/${teamSlug}/${list.slug}`}
+                  href={`/${teamSlug}/${list.slug}`}
                   className="group block bg-white rounded-2xl ring-1 ring-black/[0.04] shadow-sm p-4 hover:shadow-md hover:ring-black/[0.08] transition-all active:scale-[0.99]"
                 >
                   <div className="flex items-center gap-4">
@@ -158,7 +158,7 @@ function DateCard({
           return (
             <Link
               key={list.id}
-              href={`/t/${teamSlug}/${list.slug}`}
+              href={`/${teamSlug}/${list.slug}`}
               className={cn(
                 "flex items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors active:bg-neutral-100 group/row",
                 i < group.lists.length - 1 && "border-b border-neutral-100/80"
@@ -173,6 +173,7 @@ function DateCard({
                     {list.note}
                   </span>
                 )}
+                <SignedUpNames list={list} />
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <span
@@ -196,6 +197,33 @@ function DateCard({
         })}
       </div>
     </div>
+  );
+}
+
+function getEntryDisplayName(
+  entry: import("@/lib/types").SignupEntry,
+  list: SignupList
+): string | null {
+  // Use the first required field's value as the display name
+  const nameField =
+    list.fields.find((f) => f.key === "name") ??
+    list.fields.find((f) => f.required);
+  if (!nameField) return null;
+  const val = entry.values[nameField.key];
+  return val?.trim() || null;
+}
+
+function SignedUpNames({ list }: { list: SignupList }) {
+  const names = list.entries
+    .map((e) => getEntryDisplayName(e, list))
+    .filter(Boolean) as string[];
+
+  if (names.length === 0) return null;
+
+  return (
+    <p className="text-xs text-neutral-400 mt-0.5 truncate">
+      {names.join(", ")}
+    </p>
   );
 }
 

@@ -3,16 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { FieldDefinition, SignupList, SignupListCategory } from "@/lib/types";
+import type { FieldDefinition, Player, SignupList, SignupListCategory } from "@/lib/types";
 import { createListAction, updateListAction } from "./actions";
 import type { CreateListInput } from "./actions";
-import { ArrowLeft, Plus, Trash2, Repeat } from "lucide-react";
+import type { ListTemplateData } from "./list-templates";
+import { ArrowLeft, Plus, Trash2, Repeat, Users } from "lucide-react";
 
 type ListFormProps = {
   teamSlug: string;
   teamName: string;
+  onBack?: () => void;
+  rosterPlayers?: Player[];
 } & (
-  | { mode: "create" }
+  | { mode: "create"; template?: ListTemplateData }
   | { mode: "edit"; list: SignupList }
 );
 
@@ -29,20 +32,27 @@ export function ListForm(props: ListFormProps) {
   const router = useRouter();
   const isEdit = props.mode === "edit";
   const initial = isEdit ? props.list : null;
+  const template = props.mode === "create" ? props.template : undefined;
 
-  const [name, setName] = useState(initial?.name || "");
+  const [name, setName] = useState(
+    template?.name || initial?.name || ""
+  );
   const [category, setCategory] = useState<SignupListCategory>(
-    initial?.category || "dated"
+    template?.category || initial?.category || "dated"
   );
   const [date, setDate] = useState(initial?.date || "");
   const [time, setTime] = useState(initial?.time || "");
   const [location, setLocation] = useState(initial?.location || "");
-  const [note, setNote] = useState(initial?.note || "");
+  const [note, setNote] = useState(
+    template?.note || initial?.note || ""
+  );
   const [slotsNeeded, setSlotsNeeded] = useState(
-    initial?.slotsNeeded?.toString() || "1"
+    template?.slotsNeeded?.toString() ||
+      initial?.slotsNeeded?.toString() ||
+      "1"
   );
   const [fields, setFields] = useState<FieldDefinition[]>(
-    initial?.fields || [
+    template?.fields || initial?.fields || [
       { key: "name", label: "Your Name", type: "text", required: true },
     ]
   );
@@ -93,6 +103,10 @@ export function ListForm(props: ListFormProps) {
         !isEdit && recurring && category === "dated" && untilDate
           ? { untilDate }
           : undefined,
+      autoEntries:
+        !isEdit && props.rosterPlayers && props.rosterPlayers.length > 0
+          ? props.rosterPlayers.map((p) => p.name)
+          : undefined,
     };
 
     if (isEdit) {
@@ -108,13 +122,23 @@ export function ListForm(props: ListFormProps) {
       <header className="bg-neutral-950 text-white">
         <div className="h-1 bg-gradient-to-r from-red-900 via-red-500 to-red-900" />
         <div className="max-w-lg mx-auto px-4 py-4">
-          <Link
-            href={`/t/${props.teamSlug}/admin`}
-            className="inline-flex items-center gap-1.5 text-neutral-500 hover:text-white transition-colors text-sm"
-          >
-            <ArrowLeft className="size-3.5" />
-            Dashboard
-          </Link>
+          {props.onBack ? (
+            <button
+              onClick={props.onBack}
+              className="inline-flex items-center gap-1.5 text-neutral-500 hover:text-white transition-colors text-sm"
+            >
+              <ArrowLeft className="size-3.5" />
+              Templates
+            </button>
+          ) : (
+            <Link
+              href={`/${props.teamSlug}/admin`}
+              className="inline-flex items-center gap-1.5 text-neutral-500 hover:text-white transition-colors text-sm"
+            >
+              <ArrowLeft className="size-3.5" />
+              Dashboard
+            </Link>
+          )}
           <h1 className="font-heading text-3xl tracking-tight leading-none mt-2">
             {isEdit ? "EDIT LIST" : "NEW LIST"}
           </h1>
@@ -388,10 +412,34 @@ export function ListForm(props: ListFormProps) {
             </div>
           )}
 
+          {/* Roster auto-add info */}
+          {!isEdit && props.rosterPlayers && props.rosterPlayers.length > 0 && (
+            <div className="bg-red-50 rounded-2xl ring-1 ring-red-500/10 p-4">
+              <div className="flex items-center gap-2.5 mb-2">
+                <Users className="size-4 text-red-600" />
+                <p className="text-sm font-semibold text-red-900">
+                  {props.rosterPlayers.length} roster player
+                  {props.rosterPlayers.length !== 1 ? "s" : ""} will be
+                  auto-added
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {props.rosterPlayers.map((p) => (
+                  <span
+                    key={p.id}
+                    className="inline-block text-xs bg-white/80 text-red-800 px-2 py-0.5 rounded-md ring-1 ring-red-200/50"
+                  >
+                    {p.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Submit */}
           <div className="flex gap-3">
             <Link
-              href={`/t/${props.teamSlug}/admin`}
+              href={`/${props.teamSlug}/admin`}
               className="flex-1 h-11 rounded-xl text-neutral-700 text-sm font-medium hover:bg-neutral-200 transition-colors flex items-center justify-center bg-neutral-100"
             >
               Cancel
