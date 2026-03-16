@@ -64,7 +64,7 @@ export function AdminDashboardClient({
         <div className="h-1 bg-gradient-to-r from-red-900 via-red-500 to-red-900" />
         <div className="max-w-lg mx-auto px-4 py-4">
           <Link
-            href={`/t/${team.slug}`}
+            href={`/${team.slug}`}
             className="inline-flex items-center gap-1.5 text-neutral-500 hover:text-white transition-colors text-sm"
           >
             <ArrowLeft className="size-3.5" />
@@ -78,7 +78,7 @@ export function AdminDashboardClient({
               <p className="text-neutral-500 text-sm">{team.name}</p>
             </div>
             <Link
-              href={`/t/${team.slug}/admin/settings`}
+              href={`/${team.slug}/admin/settings`}
               className="size-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
             >
               <Settings className="size-4 text-neutral-400" />
@@ -94,7 +94,7 @@ export function AdminDashboardClient({
             Signup Lists ({lists.length})
           </h2>
           <Link
-            href={`/t/${team.slug}/admin/lists/new`}
+            href={`/${team.slug}/admin/lists/new`}
             className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-500 active:bg-red-700 transition-all"
           >
             <Plus className="size-3.5" />
@@ -113,7 +113,7 @@ export function AdminDashboardClient({
               Create your first signup list to get started.
             </p>
             <Link
-              href={`/t/${team.slug}/admin/lists/new`}
+              href={`/${team.slug}/admin/lists/new`}
               className="inline-flex items-center gap-1.5 h-10 px-5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-500 transition-all mt-4"
             >
               <Plus className="size-3.5" />
@@ -251,7 +251,7 @@ function ListCard({
 
       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100">
         <Link
-          href={`/t/${teamSlug}/${list.slug}`}
+          href={`/${teamSlug}/${list.slug}`}
           className="inline-flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 transition-colors"
         >
           <ExternalLink className="size-3" />
@@ -259,7 +259,7 @@ function ListCard({
         </Link>
         <div className="flex-1" />
         <Link
-          href={`/t/${teamSlug}/admin/lists/${list.slug}/edit`}
+          href={`/${teamSlug}/admin/lists/${list.slug}/edit`}
           className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium text-neutral-700 hover:bg-neutral-100 transition-colors"
         >
           <Pencil className="size-3" />

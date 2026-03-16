@@ -26,7 +26,7 @@ export function CoachSearch() {
         setError("No team found \u2014 check the spelling and try again");
         return;
       }
-      router.push(`/t/${results[0].slug}`);
+      router.push(`/${results[0].slug}`);
     });
   }
 

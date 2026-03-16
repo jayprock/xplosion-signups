@@ -31,7 +31,7 @@ export default function NewTeamPage() {
     });
 
     if (result.teamSlug) {
-      router.push(`/t/${result.teamSlug}/admin`);
+      router.push(`/${result.teamSlug}/admin`);
     }
   }
 

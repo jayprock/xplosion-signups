@@ -36,7 +36,7 @@ export async function loginAction(
   } else {
     cookieStore.set(`admin_${teamSlug}`, teamSlug, {
       httpOnly: true,
-      path: `/t/${teamSlug}`,
+      path: `/${teamSlug}`,
       maxAge: 7 * 24 * 60 * 60,
       sameSite: "lax",
     });
@@ -86,8 +86,8 @@ export async function createListAction(teamSlug: string, data: CreateListInput) 
     await createSignupList(team.id, listData);
   }
 
-  revalidatePath(`/t/${teamSlug}`);
-  redirect(`/t/${teamSlug}/admin`);
+  revalidatePath(`/${teamSlug}`);
+  redirect(`/${teamSlug}/admin`);
 }
 
 export type UpdateListInput = {
@@ -107,13 +107,13 @@ export async function updateListAction(
   data: UpdateListInput
 ) {
   await updateSignupList(listId, data);
-  revalidatePath(`/t/${teamSlug}`);
-  redirect(`/t/${teamSlug}/admin`);
+  revalidatePath(`/${teamSlug}`);
+  redirect(`/${teamSlug}/admin`);
 }
 
 export async function deleteListAction(teamSlug: string, listId: string) {
   await deleteSignupList(listId);
-  revalidatePath(`/t/${teamSlug}`);
+  revalidatePath(`/${teamSlug}`);
 }
 
 export type UpdateTeamInput = {
@@ -130,6 +130,6 @@ export async function updateTeamAction(
   if (!team) throw new Error("Team not found");
 
   await updateTeam(team.id, data);
-  revalidatePath(`/t/${teamSlug}`);
-  redirect(`/t/${teamSlug}/admin/settings`);
+  revalidatePath(`/${teamSlug}`);
+  redirect(`/${teamSlug}/admin/settings`);
 }
