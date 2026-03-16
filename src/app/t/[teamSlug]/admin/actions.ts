@@ -12,6 +12,9 @@ import {
   updateSignupList,
   deleteSignupList,
   updateTeam,
+  addPlayer,
+  removePlayer,
+  bulkCreateEntries,
 } from "@/lib/data";
 
 export async function loginAction(
@@ -57,6 +60,7 @@ export type CreateListInput = {
   recurring?: {
     untilDate: string; // ISO date
   };
+  autoEntries?: string[]; // player names to auto-create entries for
 };
 
 function getWeeklyDates(startDate: string, untilDate: string): string[] {
@@ -75,7 +79,7 @@ export async function createListAction(teamSlug: string, data: CreateListInput) 
   const team = await getTeamBySlug(teamSlug);
   if (!team) throw new Error("Team not found");
 
-  const { recurring, ...listData } = data;
+  const { recurring, autoEntries, ...listData } = data;
 
   if (recurring && data.category === "dated" && data.date) {
     const dates = getWeeklyDates(data.date, recurring.untilDate);
@@ -83,7 +87,10 @@ export async function createListAction(teamSlug: string, data: CreateListInput) 
       await createSignupList(team.id, { ...listData, date: d });
     }
   } else {
-    await createSignupList(team.id, listData);
+    const list = await createSignupList(team.id, listData);
+    if (autoEntries && autoEntries.length > 0) {
+      await bulkCreateEntries(list.id, autoEntries);
+    }
   }
 
   revalidatePath(`/t/${teamSlug}`);
@@ -132,4 +139,26 @@ export async function updateTeamAction(
   await updateTeam(team.id, data);
   revalidatePath(`/t/${teamSlug}`);
   redirect(`/t/${teamSlug}/admin/settings`);
+}
+
+// --- Player (roster) actions ---
+
+export async function addPlayerAction(
+  teamSlug: string,
+  name: string
+): Promise<{ id: string; name: string }> {
+  const team = await getTeamBySlug(teamSlug);
+  if (!team) throw new Error("Team not found");
+
+  const player = await addPlayer(team.id, name.trim());
+  revalidatePath(`/t/${teamSlug}`);
+  return { id: player.id, name: player.name };
+}
+
+export async function removePlayerAction(
+  teamSlug: string,
+  playerId: string
+): Promise<void> {
+  await removePlayer(playerId);
+  revalidatePath(`/t/${teamSlug}`);
 }

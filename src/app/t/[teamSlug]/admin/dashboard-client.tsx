@@ -15,6 +15,7 @@ import {
   List,
   ExternalLink,
   AlertTriangle,
+  Music,
 } from "lucide-react";
 
 type ListWithStatus = SignupList & { status: ListStatus };
@@ -200,6 +201,17 @@ export function AdminDashboardClient({
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  List card                                                          */
+/* ------------------------------------------------------------------ */
+
+function isWalkUpSong(list: ListWithStatus): boolean {
+  return (
+    list.category === "standalone" &&
+    list.fields.some((f) => f.key === "songName")
+  );
+}
+
 function ListCard({
   list,
   teamSlug,
@@ -214,22 +226,23 @@ function ListCard({
   return (
     <div className="bg-white rounded-2xl ring-1 ring-black/[0.04] shadow-sm p-4">
       <div className="flex items-start gap-3">
-        <div className="size-10 rounded-xl bg-neutral-100 flex items-center justify-center shrink-0 mt-0.5">
-          {list.category === "dated" ? (
+        <div
+          className={`size-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+            isWalkUpSong(list) ? "bg-red-50" : "bg-neutral-100"
+          }`}
+        >
+          {isWalkUpSong(list) ? (
+            <Music className="size-4 text-red-500" />
+          ) : list.category === "dated" ? (
             <Calendar className="size-4 text-neutral-400" />
           ) : (
             <List className="size-4 text-neutral-400" />
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="font-semibold text-neutral-900 truncate">
-              {list.name}
-            </p>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 bg-neutral-100 px-1.5 py-0.5 rounded shrink-0">
-              {list.category}
-            </span>
-          </div>
+          <p className="font-semibold text-neutral-900 truncate">
+            {list.name}
+          </p>
           <div className="flex items-center gap-3 mt-1">
             {list.date && (
               <span className="text-xs text-neutral-500">

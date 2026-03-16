@@ -4,6 +4,7 @@
 
 import type {
   Team,
+  Player,
   SignupList,
   SignupEntry,
   SignupListCategory,
@@ -369,5 +370,60 @@ export async function deleteSignupEntry(
     .delete()
     .eq("id", entryId)
     .eq("list_id", listId);
+  if (error) throw error;
+}
+
+// --- Player (roster) functions ---
+
+function toPlayer(row: Record<string, unknown>): Player {
+  return {
+    id: row.id as string,
+    teamId: row.team_id as string,
+    name: row.name as string,
+  };
+}
+
+export async function getPlayersForTeam(teamId: string): Promise<Player[]> {
+  const { data, error } = await supabase
+    .from("players")
+    .select("*")
+    .eq("team_id", teamId)
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map(toPlayer);
+}
+
+export async function addPlayer(
+  teamId: string,
+  name: string
+): Promise<Player> {
+  const { data: row, error } = await supabase
+    .from("players")
+    .insert({ team_id: teamId, name })
+    .select()
+    .single();
+  if (error) throw error;
+  return toPlayer(row);
+}
+
+export async function removePlayer(playerId: string): Promise<void> {
+  const { error } = await supabase
+    .from("players")
+    .delete()
+    .eq("id", playerId);
+  if (error) throw error;
+}
+
+export async function bulkCreateEntries(
+  listId: string,
+  playerNames: string[]
+): Promise<void> {
+  if (playerNames.length === 0) return;
+  const rows = playerNames.map((name, i) => ({
+    list_id: listId,
+    slot_index: i,
+    values: { playerName: name },
+  }));
+  const { error } = await supabase.from("signup_entries").insert(rows);
   if (error) throw error;
 }
