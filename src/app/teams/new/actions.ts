@@ -9,9 +9,9 @@ export async function createTeamAction(data: {
   seasonYear: number;
   adminPassword: string;
 }): Promise<{ teamSlug: string }> {
-  const slug = generateTeamSlug(data.name);
+  const slug = await generateTeamSlug(data.name);
 
-  const team = createTeam({
+  const team = await createTeam({
     ...data,
     slug,
   });

@@ -18,7 +18,7 @@ export async function loginAction(
   teamSlug: string,
   password: string
 ): Promise<{ success: boolean; error?: string }> {
-  const valid = verifyAdminPassword(teamSlug, password);
+  const valid = await verifyAdminPassword(teamSlug, password);
   if (!valid) {
     return { success: false, error: "Incorrect password" };
   }
@@ -72,7 +72,7 @@ function getWeeklyDates(startDate: string, untilDate: string): string[] {
 }
 
 export async function createListAction(teamSlug: string, data: CreateListInput) {
-  const team = getTeamBySlug(teamSlug);
+  const team = await getTeamBySlug(teamSlug);
   if (!team) throw new Error("Team not found");
 
   const { recurring, ...listData } = data;
@@ -80,10 +80,10 @@ export async function createListAction(teamSlug: string, data: CreateListInput) 
   if (recurring && data.category === "dated" && data.date) {
     const dates = getWeeklyDates(data.date, recurring.untilDate);
     for (const d of dates) {
-      createSignupList(team.id, { ...listData, date: d });
+      await createSignupList(team.id, { ...listData, date: d });
     }
   } else {
-    createSignupList(team.id, listData);
+    await createSignupList(team.id, listData);
   }
 
   revalidatePath(`/t/${teamSlug}`);
@@ -106,13 +106,13 @@ export async function updateListAction(
   listId: string,
   data: UpdateListInput
 ) {
-  updateSignupList(listId, data);
+  await updateSignupList(listId, data);
   revalidatePath(`/t/${teamSlug}`);
   redirect(`/t/${teamSlug}/admin`);
 }
 
 export async function deleteListAction(teamSlug: string, listId: string) {
-  deleteSignupList(listId);
+  await deleteSignupList(listId);
   revalidatePath(`/t/${teamSlug}`);
 }
 
@@ -126,10 +126,10 @@ export async function updateTeamAction(
   teamSlug: string,
   data: UpdateTeamInput
 ) {
-  const team = getTeamBySlug(teamSlug);
+  const team = await getTeamBySlug(teamSlug);
   if (!team) throw new Error("Team not found");
 
-  updateTeam(team.id, data);
+  await updateTeam(team.id, data);
   revalidatePath(`/t/${teamSlug}`);
   redirect(`/t/${teamSlug}/admin/settings`);
 }
