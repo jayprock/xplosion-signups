@@ -1,0 +1,164 @@
+"use server";
+
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import type { FieldDefinition, SignupListCategory } from "@/lib/types";
+import {
+  verifyAdminPassword,
+  verifySiteAdminPassword,
+  getTeamBySlug,
+  createSignupList,
+  updateSignupList,
+  deleteSignupList,
+  updateTeam,
+  addPlayer,
+  removePlayer,
+  bulkCreateEntries,
+} from "@/lib/data";
+
+export async function loginAction(
+  teamSlug: string,
+  password: string
+): Promise<{ success: boolean; error?: string }> {
+  const valid = await verifyAdminPassword(teamSlug, password);
+  if (!valid) {
+    return { success: false, error: "Incorrect password" };
+  }
+
+  const cookieStore = await cookies();
+
+  // If they used the site admin password, set the site-wide cookie
+  if (verifySiteAdminPassword(password)) {
+    cookieStore.set("site_admin", "true", {
+      httpOnly: true,
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60,
+      sameSite: "lax",
+    });
+  } else {
+    cookieStore.set(`admin_${teamSlug}`, teamSlug, {
+      httpOnly: true,
+      path: `/${teamSlug}`,
+      maxAge: 7 * 24 * 60 * 60,
+      sameSite: "lax",
+    });
+  }
+
+  return { success: true };
+}
+
+export type CreateListInput = {
+  name: string;
+  category: SignupListCategory;
+  date?: string;
+  time?: string;
+  location?: string;
+  note?: string;
+  slotsNeeded: number;
+  fields: FieldDefinition[];
+  recurring?: {
+    untilDate: string; // ISO date
+  };
+  autoEntries?: string[]; // player names to auto-create entries for
+};
+
+function getWeeklyDates(startDate: string, untilDate: string): string[] {
+  const dates: string[] = [];
+  const current = new Date(startDate + "T12:00:00");
+  const end = new Date(untilDate + "T12:00:00");
+
+  while (current <= end) {
+    dates.push(current.toISOString().split("T")[0]);
+    current.setDate(current.getDate() + 7);
+  }
+  return dates;
+}
+
+export async function createListAction(teamSlug: string, data: CreateListInput) {
+  const team = await getTeamBySlug(teamSlug);
+  if (!team) throw new Error("Team not found");
+
+  const { recurring, autoEntries, ...listData } = data;
+
+  if (recurring && data.category === "dated" && data.date) {
+    const dates = getWeeklyDates(data.date, recurring.untilDate);
+    for (const d of dates) {
+      await createSignupList(team.id, { ...listData, date: d });
+    }
+  } else {
+    const list = await createSignupList(team.id, listData);
+    if (autoEntries && autoEntries.length > 0) {
+      await bulkCreateEntries(list.id, autoEntries);
+    }
+  }
+
+  revalidatePath(`/${teamSlug}`);
+  redirect(`/${teamSlug}/admin`);
+}
+
+export type UpdateListInput = {
+  name: string;
+  category: SignupListCategory;
+  date?: string;
+  time?: string;
+  location?: string;
+  note?: string;
+  slotsNeeded: number;
+  fields: FieldDefinition[];
+};
+
+export async function updateListAction(
+  teamSlug: string,
+  listId: string,
+  data: UpdateListInput
+) {
+  await updateSignupList(listId, data);
+  revalidatePath(`/${teamSlug}`);
+  redirect(`/${teamSlug}/admin`);
+}
+
+export async function deleteListAction(teamSlug: string, listId: string) {
+  await deleteSignupList(listId);
+  revalidatePath(`/${teamSlug}`);
+}
+
+export type UpdateTeamInput = {
+  name: string;
+  seasonYear: number;
+  adminPassword: string;
+};
+
+export async function updateTeamAction(
+  teamSlug: string,
+  data: UpdateTeamInput
+) {
+  const team = await getTeamBySlug(teamSlug);
+  if (!team) throw new Error("Team not found");
+
+  await updateTeam(team.id, data);
+  revalidatePath(`/${teamSlug}`);
+  redirect(`/${teamSlug}/admin/settings`);
+}
+
+// --- Player (roster) actions ---
+
+export async function addPlayerAction(
+  teamSlug: string,
+  name: string
+): Promise<{ id: string; name: string }> {
+  const team = await getTeamBySlug(teamSlug);
+  if (!team) throw new Error("Team not found");
+
+  const player = await addPlayer(team.id, name.trim());
+  revalidatePath(`/${teamSlug}`);
+  return { id: player.id, name: player.name };
+}
+
+export async function removePlayerAction(
+  teamSlug: string,
+  playerId: string
+): Promise<void> {
+  await removePlayer(playerId);
+  revalidatePath(`/${teamSlug}`);
+}
