@@ -6,9 +6,9 @@ import {
   getStandaloneLists,
   getListStatus,
 } from "@/lib/data";
-import { V3Tabs } from "./v3-tabs";
+import { V3Client } from "./v3-client";
 
-export default async function V3TabbedPage({
+export default async function V3Page({
   params,
 }: {
   params: Promise<{ teamSlug: string }>;
@@ -18,29 +18,23 @@ export default async function V3TabbedPage({
   if (!team) notFound();
 
   const allLists = await getSignupListsForTeam(team.id);
-  const dateGroups = groupListsByDate(allLists);
-  const standaloneLists = getStandaloneLists(allLists);
 
-  // Pre-compute statuses for serialization
-  const dateGroupsData = dateGroups.map((g) => ({
+  const dateGroups = groupListsByDate(allLists).map((g) => ({
     date: g.date,
-    lists: g.lists.map((l) => ({
-      ...l,
-      _status: getListStatus(l),
-    })),
+    lists: g.lists.map((l) => ({ ...l, _status: getListStatus(l) })),
   }));
 
-  const standaloneData = standaloneLists.map((l) => ({
+  const standaloneLists = getStandaloneLists(allLists).map((l) => ({
     ...l,
     _status: getListStatus(l),
   }));
 
   return (
-    <V3Tabs
+    <V3Client
       team={team}
       teamSlug={teamSlug}
-      dateGroups={dateGroupsData}
-      standaloneLists={standaloneData}
+      dateGroups={dateGroups}
+      standaloneLists={standaloneLists}
     />
   );
 }
