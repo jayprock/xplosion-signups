@@ -266,47 +266,97 @@ function DutySection({
                   </Link>
                 </div>
               ))
-            : /* Dated: show each date instance */
-              group.lists
-                .sort(
-                  (a, b) =>
-                    new Date(a.date ?? "").getTime() -
-                    new Date(b.date ?? "").getTime()
-                )
-                .map((list, i) => (
-                  <Link
-                    key={list.id}
-                    href={`/${teamSlug}/${list.slug}`}
-                    className={cn(
-                      "flex items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors",
-                      i < group.lists.length - 1 &&
-                        "border-b border-neutral-100/80"
+            : /* Dated: show each date instance, upcoming first */
+              (() => {
+                const today = new Date().toISOString().split("T")[0];
+                const upcoming = group.lists
+                  .filter((l) => (l.date ?? "") >= today)
+                  .sort(
+                    (a, b) =>
+                      new Date(a.date ?? "").getTime() -
+                      new Date(b.date ?? "").getTime()
+                  );
+                const past = group.lists
+                  .filter((l) => (l.date ?? "") < today)
+                  .sort(
+                    (a, b) =>
+                      new Date(b.date ?? "").getTime() -
+                      new Date(a.date ?? "").getTime()
+                  );
+                const allItems = upcoming;
+                return (
+                  <>
+                    {allItems.map((list, i) => (
+                      <Link
+                        key={list.id}
+                        href={`/${teamSlug}/${list.slug}`}
+                        className={cn(
+                          "flex items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors",
+                          (i < allItems.length - 1 || past.length > 0) &&
+                            "border-b border-neutral-100/80"
+                        )}
+                      >
+                        <div className="min-w-0">
+                          <span className="text-sm text-neutral-700 font-medium">
+                            {list.date ? formatDate(list.date) : "No date"}
+                          </span>
+                          {list.note && (
+                            <span className="text-neutral-400 text-xs ml-2">
+                              {list.note}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {list._status.level === "complete" ? (
+                            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                              Complete
+                            </span>
+                          ) : (
+                            <span className="text-sm tabular-nums font-medium text-neutral-400">
+                              {list._status.filled}/{list._status.total}
+                            </span>
+                          )}
+                          <ChevronRight className="size-4 text-neutral-300" />
+                        </div>
+                      </Link>
+                    ))}
+                    {past.length > 0 && (
+                      <details className="group/past">
+                        <summary className="cursor-pointer list-none flex items-center gap-2 px-4 py-2.5 text-xs text-neutral-400 hover:text-neutral-600 transition-colors">
+                          <ChevronDown className="size-3 transition-transform duration-200 group-open/past:rotate-180" />
+                          {past.length} past{" "}
+                          {past.length === 1 ? "date" : "dates"}
+                        </summary>
+                        {past.map((list, i) => (
+                          <Link
+                            key={list.id}
+                            href={`/${teamSlug}/${list.slug}`}
+                            className={cn(
+                              "flex items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors opacity-50",
+                              i < past.length - 1 &&
+                                "border-b border-neutral-100/80"
+                            )}
+                          >
+                            <div className="min-w-0">
+                              <span className="text-sm text-neutral-700 font-medium">
+                                {list.date
+                                  ? formatDate(list.date)
+                                  : "No date"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-sm tabular-nums font-medium text-neutral-400">
+                                {list._status.filled}/{list._status.total}
+                              </span>
+                              <ChevronRight className="size-4 text-neutral-300" />
+                            </div>
+                          </Link>
+                        ))}
+                      </details>
                     )}
-                  >
-                    <div className="min-w-0">
-                      <span className="text-sm text-neutral-700 font-medium">
-                        {list.date ? formatDate(list.date) : "No date"}
-                      </span>
-                      {list.note && (
-                        <span className="text-neutral-400 text-xs ml-2">
-                          {list.note}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {list._status.level === "complete" ? (
-                        <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                          Complete
-                        </span>
-                      ) : (
-                        <span className="text-sm tabular-nums font-medium text-neutral-400">
-                          {list._status.filled}/{list._status.total}
-                        </span>
-                      )}
-                      <ChevronRight className="size-4 text-neutral-300" />
-                    </div>
-                  </Link>
-                ))}
+                  </>
+                );
+              })()}
         </div>
       )}
     </div>
@@ -317,11 +367,13 @@ function DutySection({
 export function V7Client({
   team,
   teamSlug,
+  pastDateGroups: _pastDateGroups,
   dutyGroups,
 }: {
   team: Team;
   teamSlug: string;
   dateGroups: DateGroupData[];
+  pastDateGroups: DateGroupData[];
   standaloneLists: ListWithStatus[];
   dutyGroups: DutyGroup[];
 }) {

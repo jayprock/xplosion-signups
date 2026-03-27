@@ -7,6 +7,7 @@ import type { Team, SignupList, ListStatus } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
 import {
   ChevronRight,
+  ChevronDown,
   Music,
   Calendar,
   Check,
@@ -91,16 +92,19 @@ export function V4Client({
   team,
   teamSlug,
   dateGroups,
+  pastDateGroups,
   standaloneLists,
   dutyGroups,
 }: {
   team: Team;
   teamSlug: string;
   dateGroups: DateGroupData[];
+  pastDateGroups: DateGroupData[];
   standaloneLists: ListWithStatus[];
   dutyGroups: DutyGroup[];
 }) {
   const [activeTile, setActiveTile] = useState<string | null>(null);
+  const [showPast, setShowPast] = useState(false);
 
   // Filter lists based on active tile
   const filteredDateGroups = activeTile
@@ -290,6 +294,42 @@ export function V4Client({
               No signups for &ldquo;{activeTile}&rdquo;
             </p>
           )}
+
+        {/* Past Events (respects tile filter) */}
+        {(() => {
+          const filteredPast = activeTile
+            ? pastDateGroups
+                .map((g) => ({
+                  ...g,
+                  lists: g.lists.filter((l) => l.name === activeTile),
+                }))
+                .filter((g) => g.lists.length > 0)
+            : pastDateGroups;
+          if (filteredPast.length === 0) return null;
+          return (
+            <section className="space-y-4">
+              <button
+                onClick={() => setShowPast(!showPast)}
+                className="flex items-center gap-2 text-sm text-neutral-400 hover:text-neutral-600 transition-colors px-1"
+              >
+                <ChevronDown
+                  className={cn(
+                    "size-4 transition-transform duration-200",
+                    showPast && "rotate-180"
+                  )}
+                />
+                {showPast ? "Hide" : "Show"} {filteredPast.length} past{" "}
+                {filteredPast.length === 1 ? "date" : "dates"}
+              </button>
+              {showPast &&
+                filteredPast.map((group) => (
+                  <div key={group.date} className="opacity-50">
+                    <DateCard group={group} teamSlug={teamSlug} />
+                  </div>
+                ))}
+            </section>
+          );
+        })()}
       </main>
     </div>
   );

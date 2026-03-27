@@ -54,10 +54,13 @@ export default async function V4Page({
 
   const allLists = await getSignupListsForTeam(team.id);
 
-  const dateGroups = groupListsByDate(allLists).map((g) => ({
+  const today = new Date().toISOString().split("T")[0];
+  const allDateGroups = groupListsByDate(allLists).map((g) => ({
     date: g.date,
     lists: g.lists.map((l) => ({ ...l, _status: getListStatus(l) })),
   }));
+  const dateGroups = allDateGroups.filter((g) => g.date >= today);
+  const pastDateGroups = [...allDateGroups.filter((g) => g.date < today)].reverse();
 
   const standaloneLists = getStandaloneLists(allLists).map((l) => ({
     ...l,
@@ -71,6 +74,7 @@ export default async function V4Page({
       team={team}
       teamSlug={teamSlug}
       dateGroups={dateGroups}
+      pastDateGroups={pastDateGroups}
       standaloneLists={standaloneLists}
       dutyGroups={dutyGroups}
     />

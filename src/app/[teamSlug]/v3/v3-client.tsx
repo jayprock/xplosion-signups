@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { Team, SignupList, ListStatus } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
-import { ChevronRight, Music, Calendar, X } from "lucide-react";
+import { ChevronRight, ChevronDown, Music, Calendar, X } from "lucide-react";
 
 type ListWithStatus = SignupList & { _status: ListStatus };
 type DateGroupData = { date: string; lists: ListWithStatus[] };
@@ -90,14 +90,17 @@ export function V3Client({
   team,
   teamSlug,
   dateGroups,
+  pastDateGroups,
   standaloneLists,
 }: {
   team: Team;
   teamSlug: string;
   dateGroups: DateGroupData[];
+  pastDateGroups: DateGroupData[];
   standaloneLists: ListWithStatus[];
 }) {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [showPast, setShowPast] = useState(false);
 
   // Build filter chips from unique list names
   const chips = useMemo(() => {
@@ -284,6 +287,42 @@ export function V3Client({
               No signups match this filter
             </p>
           )}
+
+        {/* Past Events (respects active filter) */}
+        {(() => {
+          const filteredPast = activeFilter
+            ? pastDateGroups
+                .map((g) => ({
+                  ...g,
+                  lists: g.lists.filter((l) => l.name === activeFilter),
+                }))
+                .filter((g) => g.lists.length > 0)
+            : pastDateGroups;
+          if (filteredPast.length === 0) return null;
+          return (
+            <section className="space-y-4">
+              <button
+                onClick={() => setShowPast(!showPast)}
+                className="flex items-center gap-2 text-sm text-neutral-400 hover:text-neutral-600 transition-colors px-1"
+              >
+                <ChevronDown
+                  className={cn(
+                    "size-4 transition-transform duration-200",
+                    showPast && "rotate-180"
+                  )}
+                />
+                {showPast ? "Hide" : "Show"} {filteredPast.length} past{" "}
+                {filteredPast.length === 1 ? "date" : "dates"}
+              </button>
+              {showPast &&
+                filteredPast.map((group) => (
+                  <div key={group.date} className="opacity-50">
+                    <DateCard group={group} teamSlug={teamSlug} />
+                  </div>
+                ))}
+            </section>
+          );
+        })()}
       </main>
     </div>
   );

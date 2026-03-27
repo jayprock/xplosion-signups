@@ -14,6 +14,7 @@ import { StatusBadge } from "@/components/status-badge";
 import {
   ArrowLeft,
   ChevronRight,
+  ChevronDown,
   Music,
   Calendar,
   Shield,
@@ -92,7 +93,10 @@ export default async function V2Pinned({
   if (!team) notFound();
 
   const allLists = await getSignupListsForTeam(team.id);
-  const dateGroups = groupListsByDate(allLists);
+  const today = new Date().toISOString().split("T")[0];
+  const allDateGroups = groupListsByDate(allLists);
+  const dateGroups = allDateGroups.filter((g) => g.date >= today);
+  const pastDateGroups = [...allDateGroups.filter((g) => g.date < today)].reverse();
   const standaloneLists = getStandaloneLists(allLists);
 
   return (
@@ -177,6 +181,30 @@ export default async function V2Pinned({
                 teamSlug={teamSlug}
               />
             ))}
+          </section>
+        )}
+
+        {/* Past Events — collapsible via <details> */}
+        {pastDateGroups.length > 0 && (
+          <section>
+            <details className="group">
+              <summary className="cursor-pointer list-none flex items-center gap-2 text-sm text-neutral-400 hover:text-neutral-600 transition-colors px-1 py-2">
+                <ChevronDown className="size-4 transition-transform duration-200 group-open:rotate-180" />
+                <span>
+                  Show {pastDateGroups.length} past{" "}
+                  {pastDateGroups.length === 1 ? "date" : "dates"}
+                </span>
+              </summary>
+              <div className="space-y-4 mt-2 opacity-50">
+                {pastDateGroups.map((group) => (
+                  <DateCard
+                    key={group.date}
+                    group={group}
+                    teamSlug={teamSlug}
+                  />
+                ))}
+              </div>
+            </details>
           </section>
         )}
       </main>

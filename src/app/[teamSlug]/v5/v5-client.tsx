@@ -5,7 +5,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { Team, SignupList, ListStatus } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
-import { ChevronRight, Music, Calendar, Pin } from "lucide-react";
+import { ChevronRight, ChevronDown, Music, Calendar, Pin } from "lucide-react";
 
 type ListWithStatus = SignupList & { _status: ListStatus };
 type DateGroupData = { date: string; lists: ListWithStatus[] };
@@ -79,14 +79,17 @@ export function V5Client({
   team,
   teamSlug,
   dateGroups,
+  pastDateGroups,
   standaloneLists,
 }: {
   team: Team;
   teamSlug: string;
   dateGroups: DateGroupData[];
+  pastDateGroups: DateGroupData[];
   standaloneLists: ListWithStatus[];
 }) {
   const [activeTab, setActiveTab] = useState<Tab>("schedule");
+  const [showPast, setShowPast] = useState(false);
 
   const pendingTeamLists = standaloneLists.filter(
     (l) => l._status.level !== "complete"
@@ -188,6 +191,31 @@ export function V5Client({
                     teamSlug={teamSlug}
                   />
                 ))}
+              </section>
+            )}
+
+            {/* Past Events */}
+            {pastDateGroups.length > 0 && (
+              <section className="space-y-4">
+                <button
+                  onClick={() => setShowPast(!showPast)}
+                  className="flex items-center gap-2 text-sm text-neutral-400 hover:text-neutral-600 transition-colors px-1"
+                >
+                  <ChevronDown
+                    className={cn(
+                      "size-4 transition-transform duration-200",
+                      showPast && "rotate-180"
+                    )}
+                  />
+                  {showPast ? "Hide" : "Show"} {pastDateGroups.length} past{" "}
+                  {pastDateGroups.length === 1 ? "date" : "dates"}
+                </button>
+                {showPast &&
+                  pastDateGroups.map((group) => (
+                    <div key={group.date} className="opacity-50">
+                      <DateCard group={group} teamSlug={teamSlug} />
+                    </div>
+                  ))}
               </section>
             )}
           </>
