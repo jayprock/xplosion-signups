@@ -5,11 +5,11 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { Team, SignupList, ListStatus } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
-import { ChevronRight, ChevronDown, Music, Calendar } from "lucide-react";
+import { ChevronRight, Music, Calendar } from "lucide-react";
 
 type ListWithStatus = SignupList & { _status: ListStatus };
 type DateGroupData = { date: string; lists: ListWithStatus[] };
-type Tab = "all" | "scheduled" | "team-lists";
+type Tab = "all" | "upcoming" | "team-lists" | "completed";
 
 /* ─── Variation Nav ─── */
 function VariationNav({
@@ -74,6 +74,16 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function getSignedUpNames(list: ListWithStatus): string[] {
+  const nameField =
+    list.fields.find((f) => f.key === "name") ??
+    list.fields.find((f) => f.required);
+  if (!nameField) return [];
+  return list.entries
+    .map((e) => e.values[nameField.key]?.trim())
+    .filter(Boolean) as string[];
+}
+
 /* ─── Tab Button ─── */
 function TabButton({
   active,
@@ -128,14 +138,14 @@ export function V1Client({
   standaloneLists: ListWithStatus[];
 }) {
   const [activeTab, setActiveTab] = useState<Tab>("all");
-  const [showPast, setShowPast] = useState(false);
 
   const pendingTeamLists = standaloneLists.filter(
     (l) => l._status.level !== "complete"
   ).length;
 
-  const showSchedule = activeTab === "all" || activeTab === "scheduled";
+  const showUpcoming = activeTab === "all" || activeTab === "upcoming";
   const showTeamLists = activeTab === "all" || activeTab === "team-lists";
+  const showCompleted = activeTab === "all" || activeTab === "completed";
 
   return (
     <div className="min-h-dvh bg-neutral-100">
@@ -156,7 +166,7 @@ export function V1Client({
 
       {/* Tab Bar */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-neutral-200 sticky top-[33px] z-40">
-        <div className="max-w-lg mx-auto px-4 flex gap-1.5 py-2">
+        <div className="max-w-lg mx-auto px-4 flex flex-wrap gap-1.5 py-2">
           <TabButton
             active={activeTab === "all"}
             onClick={() => setActiveTab("all")}
@@ -164,10 +174,10 @@ export function V1Client({
             All
           </TabButton>
           <TabButton
-            active={activeTab === "scheduled"}
-            onClick={() => setActiveTab("scheduled")}
+            active={activeTab === "upcoming"}
+            onClick={() => setActiveTab("upcoming")}
           >
-            Scheduled
+            Upcoming
           </TabButton>
           <TabButton
             active={activeTab === "team-lists"}
@@ -176,13 +186,19 @@ export function V1Client({
           >
             Team Lists
           </TabButton>
+          <TabButton
+            active={activeTab === "completed"}
+            onClick={() => setActiveTab("completed")}
+          >
+            Completed
+          </TabButton>
         </div>
       </div>
 
       {/* Content */}
       <main className="max-w-lg mx-auto px-4 py-6 space-y-8">
-        {/* Schedule section */}
-        {showSchedule && dateGroups.length > 0 && (
+        {/* Upcoming */}
+        {showUpcoming && dateGroups.length > 0 && (
           <section className="space-y-4">
             <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-400 px-1">
               Upcoming
@@ -197,7 +213,7 @@ export function V1Client({
           </section>
         )}
 
-        {/* Team Lists section */}
+        {/* Team Lists */}
         {showTeamLists && standaloneLists.length > 0 && (
           <section className="space-y-4">
             <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-400 px-1">
@@ -213,45 +229,36 @@ export function V1Client({
           </section>
         )}
 
-        {/* Empty states */}
-        {showSchedule &&
-          dateGroups.length === 0 &&
-          (!showTeamLists || standaloneLists.length === 0) && (
-            <p className="text-center text-neutral-400 text-sm py-12">
-              No upcoming signups
-            </p>
-          )}
-
-        {/* Past Events */}
-        {showSchedule && pastDateGroups.length > 0 && (
+        {/* Completed */}
+        {showCompleted && pastDateGroups.length > 0 && (
           <section className="space-y-4">
-            <button
-              onClick={() => setShowPast(!showPast)}
-              className="flex items-center gap-2 text-sm text-neutral-400 hover:text-neutral-600 transition-colors px-1"
-            >
-              <ChevronDown
-                className={cn(
-                  "size-4 transition-transform duration-200",
-                  showPast && "rotate-180"
-                )}
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-400 px-1">
+              Completed
+            </h2>
+            {pastDateGroups.map((group) => (
+              <DateCard
+                key={group.date}
+                group={group}
+                teamSlug={teamSlug}
               />
-              {showPast ? "Hide" : "Show"} {pastDateGroups.length} past{" "}
-              {pastDateGroups.length === 1 ? "date" : "dates"}
-            </button>
-            {showPast &&
-              pastDateGroups.map((group) => (
-                <div key={group.date} className="opacity-50">
-                  <DateCard group={group} teamSlug={teamSlug} />
-                </div>
-              ))}
+            ))}
           </section>
         )}
+
+        {/* Empty state */}
+        {(!showUpcoming || dateGroups.length === 0) &&
+          (!showTeamLists || standaloneLists.length === 0) &&
+          (!showCompleted || pastDateGroups.length === 0) && (
+            <p className="text-center text-neutral-400 text-sm py-12">
+              Nothing to show
+            </p>
+          )}
       </main>
     </div>
   );
 }
 
-/* ─── DateCard ─── */
+/* ─── DateCard with signed-up names ─── */
 function DateCard({
   group,
   teamSlug,
@@ -270,40 +277,49 @@ function DateCard({
         <StatusBadge level={allDone ? "complete" : "urgent"} />
       </div>
       <div className="border-t border-neutral-100/80">
-        {group.lists.map((list, i) => (
-          <Link
-            key={list.id}
-            href={`/${teamSlug}/${list.slug}`}
-            className={cn(
-              "flex items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors",
-              i < group.lists.length - 1 && "border-b border-neutral-100/80"
-            )}
-          >
-            <div className="min-w-0">
-              <span className="font-medium text-neutral-700 text-sm">
-                {list.name}
-              </span>
-              {list.note && (
-                <span className="text-neutral-400 text-xs ml-2">
-                  {list.note}
-                </span>
+        {group.lists.map((list, i) => {
+          const names = getSignedUpNames(list);
+          return (
+            <Link
+              key={list.id}
+              href={`/${teamSlug}/${list.slug}`}
+              className={cn(
+                "flex items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors",
+                i < group.lists.length - 1 &&
+                  "border-b border-neutral-100/80"
               )}
-            </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <span
-                className={cn(
-                  "text-sm tabular-nums font-medium",
-                  list._status.level === "complete"
-                    ? "text-emerald-600"
-                    : "text-neutral-400"
+            >
+              <div className="min-w-0">
+                <span className="font-medium text-neutral-700 text-sm">
+                  {list.name}
+                </span>
+                {list.note && (
+                  <span className="text-neutral-400 text-xs ml-2">
+                    {list.note}
+                  </span>
                 )}
-              >
-                {list._status.filled}/{list._status.total}
-              </span>
-              <ChevronRight className="size-4 text-neutral-300" />
-            </div>
-          </Link>
-        ))}
+                {names.length > 0 && (
+                  <p className="text-xs text-neutral-400 mt-0.5 truncate">
+                    {names.join(", ")}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <span
+                  className={cn(
+                    "text-sm tabular-nums font-medium",
+                    list._status.level === "complete"
+                      ? "text-emerald-600"
+                      : "text-neutral-400"
+                  )}
+                >
+                  {list._status.filled}/{list._status.total}
+                </span>
+                <ChevronRight className="size-4 text-neutral-300" />
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

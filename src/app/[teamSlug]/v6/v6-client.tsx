@@ -379,6 +379,14 @@ function DateCard({
                   {list.note}
                 </span>
               )}
+              {(() => {
+                const nf = list.fields.find((f) => f.key === "name") ?? list.fields.find((f) => f.required);
+                if (!nf) return null;
+                const names = list.entries.map((e) => e.values[nf.key]?.trim()).filter(Boolean);
+                return names.length > 0 ? (
+                  <p className="text-xs text-neutral-400 mt-0.5 truncate">{names.join(", ")}</p>
+                ) : null;
+              })()}
             </div>
             <div className="flex items-center gap-3 shrink-0">
               <span

@@ -177,7 +177,7 @@ export function V3Client({
 
       {/* Filter Chips */}
       <div className="bg-white border-b border-neutral-200 sticky top-[33px] z-40">
-        <div className="max-w-lg mx-auto px-4 py-2.5 flex gap-2 overflow-x-auto scrollbar-none">
+        <div className="max-w-lg mx-auto px-4 py-2.5 flex flex-wrap gap-2">
           {/* "All" chip */}
           <button
             onClick={() => setActiveFilter(null)}
@@ -365,6 +365,14 @@ function DateCard({
                   {list.note}
                 </span>
               )}
+              {(() => {
+                const nf = list.fields.find((f) => f.key === "name") ?? list.fields.find((f) => f.required);
+                if (!nf) return null;
+                const names = list.entries.map((e) => e.values[nf.key]?.trim()).filter(Boolean);
+                return names.length > 0 ? (
+                  <p className="text-xs text-neutral-400 mt-0.5 truncate">{names.join(", ")}</p>
+                ) : null;
+              })()}
             </div>
             <div className="flex items-center gap-3 shrink-0">
               <span

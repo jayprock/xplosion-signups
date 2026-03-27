@@ -295,7 +295,7 @@ export function V4Client({
             </p>
           )}
 
-        {/* Past Events (respects tile filter) */}
+        {/* Completed */}
         {(() => {
           const filteredPast = activeTile
             ? pastDateGroups
@@ -308,25 +308,18 @@ export function V4Client({
           if (filteredPast.length === 0) return null;
           return (
             <section className="space-y-4">
-              <button
-                onClick={() => setShowPast(!showPast)}
-                className="flex items-center gap-2 text-sm text-neutral-400 hover:text-neutral-600 transition-colors px-1"
-              >
-                <ChevronDown
-                  className={cn(
-                    "size-4 transition-transform duration-200",
-                    showPast && "rotate-180"
-                  )}
+              {!activeTile && (
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-400 px-1">
+                  Completed
+                </h2>
+              )}
+              {filteredPast.map((group) => (
+                <DateCard
+                  key={group.date}
+                  group={group}
+                  teamSlug={teamSlug}
                 />
-                {showPast ? "Hide" : "Show"} {filteredPast.length} past{" "}
-                {filteredPast.length === 1 ? "date" : "dates"}
-              </button>
-              {showPast &&
-                filteredPast.map((group) => (
-                  <div key={group.date} className="opacity-50">
-                    <DateCard group={group} teamSlug={teamSlug} />
-                  </div>
-                ))}
+              ))}
             </section>
           );
         })()}
@@ -372,6 +365,14 @@ function DateCard({
                   {list.note}
                 </span>
               )}
+              {(() => {
+                const nf = list.fields.find((f) => f.key === "name") ?? list.fields.find((f) => f.required);
+                if (!nf) return null;
+                const names = list.entries.map((e) => e.values[nf.key]?.trim()).filter(Boolean);
+                return names.length > 0 ? (
+                  <p className="text-xs text-neutral-400 mt-0.5 truncate">{names.join(", ")}</p>
+                ) : null;
+              })()}
             </div>
             <div className="flex items-center gap-3 shrink-0">
               <span
