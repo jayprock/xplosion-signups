@@ -5,65 +5,17 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { Team, SignupList, ListStatus } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
-import { ChevronRight, Music, Calendar } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Music,
+  Calendar,
+  Shield,
+} from "lucide-react";
 
 type ListWithStatus = SignupList & { _status: ListStatus };
 type DateGroupData = { date: string; lists: ListWithStatus[] };
 type Tab = "all" | "upcoming" | "team-lists" | "completed";
-
-/* ─── Variation Nav ─── */
-function VariationNav({
-  current,
-  teamSlug,
-}: {
-  current: number;
-  teamSlug: string;
-}) {
-  const names = [
-    "Category Tabs",
-    "Pinned",
-    "Filter Chips",
-    "Dashboard Tiles",
-    "Tabs + Pinned",
-    "Themed Tabs",
-    "Dashboard",
-  ];
-  return (
-    <div className="bg-black/90 backdrop-blur-sm border-b border-white/5 px-4 py-2 flex items-center justify-between text-xs sticky top-0 z-50">
-      <div className="flex items-center gap-4">
-        {current > 1 ? (
-          <Link
-            href={`/${teamSlug}/v${current - 1}`}
-            className="text-neutral-400 hover:text-white transition-colors"
-          >
-            ← V{current - 1}
-          </Link>
-        ) : (
-          <span className="text-neutral-700">← Prev</span>
-        )}
-        <span className="text-neutral-500 font-medium">
-          V{current} · {names[current - 1]}
-        </span>
-        {current < 7 ? (
-          <Link
-            href={`/${teamSlug}/v${current + 1}`}
-            className="text-neutral-400 hover:text-white transition-colors"
-          >
-            V{current + 1} →
-          </Link>
-        ) : (
-          <span className="text-neutral-700">Next →</span>
-        )}
-      </div>
-      <Link
-        href={`/${teamSlug}`}
-        className="text-neutral-500 hover:text-white transition-colors"
-      >
-        Original ↗
-      </Link>
-    </div>
-  );
-}
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
@@ -123,8 +75,8 @@ function TabButton({
   );
 }
 
-/* ─── Main Client ─── */
-export function V1Client({
+/* ─── Dashboard ─── */
+export function DashboardClient({
   team,
   teamSlug,
   dateGroups,
@@ -149,23 +101,37 @@ export function V1Client({
 
   return (
     <div className="min-h-dvh bg-neutral-100">
-      <VariationNav current={1} teamSlug={teamSlug} />
-
       {/* Header */}
       <header className="bg-neutral-950 text-white">
         <div className="h-1 bg-gradient-to-r from-red-900 via-red-500 to-red-900" />
         <div className="max-w-lg mx-auto px-4 py-5">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-neutral-500 hover:text-white transition-colors text-sm mb-3"
+          >
+            <ArrowLeft className="size-3.5" />
+            Home
+          </Link>
           <h1 className="font-heading text-4xl tracking-tight leading-none">
             {team.name.toUpperCase()}
           </h1>
-          <p className="text-neutral-500 text-sm mt-1">
-            Coach {team.coachLastName} &middot; {team.seasonYear}
-          </p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-neutral-500 text-sm">
+              Coach {team.coachLastName} &middot; {team.seasonYear}
+            </p>
+            <Link
+              href={`/${teamSlug}/admin`}
+              className="inline-flex items-center gap-1.5 text-neutral-600 hover:text-white text-xs font-medium transition-colors"
+            >
+              <Shield className="size-3" />
+              Admin
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* Tab Bar */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-neutral-200 sticky top-[33px] z-40">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-neutral-200 sticky top-0 z-40">
         <div className="max-w-lg mx-auto px-4 flex flex-wrap gap-1.5 py-2">
           <TabButton
             active={activeTab === "all"}
@@ -258,7 +224,7 @@ export function V1Client({
   );
 }
 
-/* ─── DateCard with signed-up names ─── */
+/* ─── DateCard ─── */
 function DateCard({
   group,
   teamSlug,
