@@ -1,12 +1,14 @@
 {
   "name": "x-signups",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "backup": "node --env-file=.env.local scripts/backup-data.mjs",
+    "backup:prod": "node --env-file=.env.production.local scripts/backup-data.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
